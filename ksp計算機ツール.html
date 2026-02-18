@@ -1,0 +1,5358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ダビスタKSP計算ツール（ワイヤーフレーム）</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0;
+      background-color: #f5f5f5;
+      font-size: 13px;
+    }
+
+    .app {
+      width: 840px;
+      height: 500px; /* 固定高さ */
+      margin: 8px auto;
+      background-color: #ffffff;
+      padding: 12px 16px 16px;
+      border-radius: 4px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+
+    .layout {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .panel {
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      padding: 8px 10px;
+      background-color: #fafafa;
+      box-sizing: border-box;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .panel-title-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title-note {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    /* 左側入力エリア：幅・高さ固定 */
+    .panel-input {
+      flex: 0 0 500px;
+      height: 424px;
+    }
+
+    /* 右カラム：保存リスト＋母馬履歴 */
+    .panel-right-column {
+      flex: 0 0 256px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .panel-list,
+    .panel-history {
+      width: 100%;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .label-fixed {
+      width: 70px;
+      display: inline-block;
+    }
+
+    .label-small {
+      width: 30px;
+      display: inline-block;
+      text-align: right;
+    }
+
+　　.label-nyuukyuu {
+      width: 60px;
+      display: inline-block;
+      text-align: right;
+    }
+
+    .label-tiny {
+      width: 15px;
+      display: inline-block;
+      text-align: center;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      padding: 2px 4px;
+      font-size: 12px;
+      box-sizing: border-box;
+    }
+
+    input[type="number"] {
+      width: 90px;
+    }
+
+    #best-weight {
+      width: 70px;
+    }
+
+    #ok-month,
+    #ok-week {
+      width: 40px;
+    }
+
+    /* 行／段プルダウン幅 50px・左寄せ */
+    #stallion-initial,
+    #mare-initial,
+    #stallion-consonant,
+    #mare-consonant {
+      width: 50px;
+      text-align: left;
+      text-align-last: left;
+    }
+
+    /* 名前プルダウン幅 140px */
+    #stallion-name,
+    #mare-name {
+      width: 140px;
+      flex: 0 0 140px;
+    }
+
+    /* 当歳コメプルダウン幅 96px */
+    #comment-baby {
+      width: 96px;
+    }
+
+    .radio-group,
+    .checkbox-group-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* checkbox グループ幅 50px */
+    .checkbox-group-inline {
+      width: 50px;
+    }
+
+    /* 当歳コメ＋プルダウンのまとまり */
+    .baby-box {
+      display: flex;
+      align-items: center;
+      width: 155px;
+    }
+
+    .baby-box-label {
+      width: 54px;
+      padding-right: 5px; /* ラベルとプルダウンの間の余白 */
+    }
+
+    /* 価格ラベル＋入力のまとまり（仔馬／種馬／母馬） */
+    .price-box {
+      display: flex;
+      align-items: center;
+      width: 150px;
+    }
+
+    .price-box-label {
+      width: 60px;
+      padding-right: 5px; /* ラベルと入力欄の間の余白 */
+    }
+
+    .price-box input[type="number"] {
+      width: 85px;
+    }
+
+    .sp-grid-wrapper {
+      margin-top: 6px;
+    }
+
+    table.sp-grid {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .sp-grid th,
+    .sp-grid td {
+      border: 1px solid #cccccc;
+      text-align: center;
+      padding: 2px;
+      font-size: 11px;
+    }
+
+    .sp-grid input[type="text"] {
+      width: 100%;
+      border: none;
+      padding: 2px;
+      box-sizing: border-box;
+      text-align: center;
+      background-color: #ffffff;
+    }
+
+    .btn {
+      padding: 3px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #1976d2;
+      color: #ffffff;
+      border: 1px solid #0f4d99;
+    }
+
+    .btn-secondary {
+      background-color: #e0e0e0;
+      border: 1px solid #b0b0b0;
+    }
+
+    .ksp-result-row {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      height: 60px;
+    }
+
+    .ksp-break {
+      flex-basis: 100%;
+      height: 0;
+    }
+
+    .ksp-field {
+      border: 1px solid #cccccc;
+      border-radius: 3px;
+      padding: 2px 4px;
+      background-color: #ffffff;
+      min-width: 90px;
+      font-size: 12px;
+    }
+
+    .saved-slot {
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      padding: 4px;
+      margin-bottom: 6px;
+      background-color: #ffffff;
+      font-size: 12px;
+    }
+
+    .saved-slot-header {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .saved-slot-line {
+      margin-bottom: 2px;
+    }
+
+    .history-list {
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      padding: 4px;
+      background-color: #ffffff;
+      font-size: 12px;
+    }
+
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .history-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .ok-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      flex-wrap: nowrap;
+      min-width: 0;
+    }
+
+    .ok-group #ok-reset {
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>ダビスタKSP計算ツール</h1>
+
+    <div class="layout">
+      <!-- 入力エリア -->
+      <section class="panel panel-input">
+        <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>入力エリア</span>
+          <div class="panel-title-actions">
+            <span class="panel-title-note">※牝馬価格=引退時の本賞金+400(上限25000)</span>
+            <button type="button" id="reset-all" class="btn btn-secondary">全項目のリセット</button>
+          </div>
+        </div>
+
+        <!-- 仔馬価格ブロック＋性別＋当歳コメ -->
+        <div class="form-row">
+          <div class="price-box">
+            <span class="price-box-label">仔馬価格</span>
+            <input id="price-foal" type="number" min="100" step="100" value="1000">
+          </div>
+          <span class="label-small">性別</span>
+          <div class="radio-group">
+            <label><input type="radio" name="sex" value="牡"> 牡</label>
+            <label><input type="radio" name="sex" value="牝"> 牝</label>
+          </div>
+          <div class="baby-box">
+            <span class="baby-box-label">当歳コメ</span>
+            <select id="comment-baby">
+              <option value="">（選択なし）</option>
+              <option>やんちゃ</option>
+              <option>元気に</option>
+              <option>おとなし</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 種馬価格ブロック＋行／段／名前＋素質 -->
+        <div class="form-row">
+          <div class="price-box">
+            <span class="price-box-label">種馬価格</span>
+            <input id="price-stallion" type="number" min="0" step="10">
+          </div>
+          <span class="label-tiny">行</span>
+          <select id="stallion-initial">
+            <option value="ア">ア</option><option value="カ">カ</option><option value="サ">サ</option><option value="タ">タ</option>
+            <option value="ナ">ナ</option><option value="ハ">ハ</option><option value="マ">マ</option><option value="ヤ">ヤ</option>
+            <option value="ラ">ラ</option><option value="ワ">ワ</option><option value="A">Ａ</option>
+          </select>
+          <span class="label-tiny">段</span>
+          <select id="stallion-consonant">
+            <option>-</option>
+          </select>
+          <select id="stallion-name">
+            <option>抽出された種牡馬一覧</option>
+          </select>
+          <div class="checkbox-group-inline">
+            <label><input type="checkbox" name="comment-2yo-soshitsu"> 素質</label>
+          </div>
+        </div>
+
+        <!-- 母馬価格ブロック＋行／段／名前＋賢い -->
+        <div class="form-row">
+          <div class="price-box">
+            <span class="price-box-label">母馬価格</span>
+            <input id="price-mare" type="number" min="400" step="100" value="400">
+          </div>
+          <span class="label-tiny">行</span>
+          <select id="mare-initial">
+            <option value="ア">ア</option><option value="カ">カ</option><option value="サ">サ</option><option value="タ">タ</option>
+            <option value="ナ">ナ</option><option value="ハ">ハ</option><option value="マ">マ</option><option value="ヤ">ヤ</option>
+            <option value="ラ">ラ</option><option value="ワ">ワ</option>
+          </select>
+          <span class="label-tiny">段</span>
+          <select id="mare-consonant">
+            <option>-</option>
+          </select>
+          <select id="mare-name">
+            <option>抽出された母馬一覧</option>
+          </select>
+          <div class="checkbox-group-inline">
+            <label><input type="checkbox" name="comment-2yo-kashikoi"> 賢い</label>
+          </div>
+        </div>
+
+        <!-- ベスト体重：+10 / -10 / +50 / -50 ボタン -->
+        <div class="form-row">
+          <label class="label-fixed" for="best-weight">ベスト体重</label>
+          <input id="best-weight" type="number" min="0" step="2">
+          <span>kg</span>
+          <button type="button" class="btn btn-secondary">＋10</button>
+          <button type="button" class="btn btn-secondary">－10</button>
+          <button type="button" class="btn btn-secondary">＋50</button>
+          <button type="button" class="btn btn-secondary">－50</button>
+        </div>
+
+        <!-- 成長型＆入厩OK -->
+        <div class="form-row">
+          <label class="label-fixed" for="growth-type">成長型</label>
+          <select id="growth-type">
+            <option>超早熟</option><option>早熟</option><option>普通</option>
+            <option>遅普通</option><option>晩成</option><option>超晩成</option>
+          </select>
+          <div class="ok-group" style="display:flex; align-items:center; gap:6px;">
+            <span class="label-nyuukyuu">入厩ＯＫ</span>
+            <input id="ok-month" type="number" min="4" max="12" value="4">
+            <span>月</span>
+            <input id="ok-week" type="number" min="1" max="4" value="1">
+            <span>週</span>
+            <button type="button" id="ok-reset" class="btn btn-secondary">４月１週に戻す</button>
+          </div>
+        </div>
+
+        <!-- ＳＰコメント週チェック -->
+        <div class="sp-grid-wrapper">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span>ＳＰコメント週チェック※健康はクリックで丈夫／虚弱選択可</span>
+            <button type="button" id="sp-reset" class="btn btn-secondary">コメント週リセット</button>
+          </div>
+          <table class="sp-grid">
+            <thead>
+              <tr>
+                <th></th>
+                <th>1週</th>
+                <th>2週</th>
+                <th>3週</th>
+                <th>4週</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>奇</th>
+                <td><input type="text" readonly value=""></td>
+                <td><input type="text" readonly value=""></td>
+                <td><input type="text" readonly value=""></td>
+                <td><input type="text" readonly value=""></td>
+              </tr>
+              <tr>
+                <th>偶</th>
+                <td><input type="text" readonly value=""></td>
+                <td><input type="text" readonly value=""></td>
+                <td><input type="text" readonly value=""></td>
+                <td><input type="text" readonly value=""></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- KSP計算結果 -->
+        <div style="margin-top:8px;">
+          <div>KSP計算結果</div>
+          <button type="button" class="btn btn-primary" style="margin-top:2px;">KSP計算実行</button>
+
+          <div class="ksp-result-row">
+            <div class="ksp-field">候補１：──</div>
+            <div class="ksp-field">候補２：──</div>
+            <div class="ksp-field">候補３：──</div>
+            <button type="button" class="btn btn-secondary">データをリストに追加</button>
+            <div class="ksp-break"></div>
+            <div class="ksp-field">候補４：──</div>
+            <div class="ksp-field">候補５：──</div>
+            <div class="ksp-field">候補６：──</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右カラム：保存済みリスト + 母馬履歴 -->
+      <div class="panel-right-column">
+
+        <!-- 保存済みリスト -->
+        <section class="panel panel-list">
+          <div class="panel-title">保存済みリスト</div>
+
+          <div class="saved-slot">
+            <div class="saved-slot-header">リスト１：KSP ──／成長型 ──</div>
+            <div class="saved-slot-line">能力コメント（ST・根性 など）</div>
+            <div class="saved-slot-line">気性／落着／丈夫／虚弱 など</div>
+          </div>
+
+          <div class="saved-slot">
+            <div class="saved-slot-header">リスト２：KSP ──／成長型 ──</div>
+            <div class="saved-slot-line">能力コメント（ST・根性 など）</div>
+            <div class="saved-slot-line">気性／落着／丈夫／虚弱 など</div>
+          </div>
+
+          <div class="saved-slot">
+            <div class="saved-slot-header">リスト３：KSP ──／成長型 ──</div>
+            <div class="saved-slot-line">能力コメント（ST・根性 など）</div>
+            <div class="saved-slot-line">気性／落着／丈夫／虚弱 など</div>
+          </div>
+
+          <div style="margin-top:6px;">
+            <div class="form-row">
+              <label class="label-small" for="list-remove-index">リスト</label>
+              <select id="list-remove-index">
+                <option value="1">１</option>
+                <option value="2">２</option>
+                <option value="3">３</option>
+              </select>
+              <button type="button" class="btn btn-secondary">選択リスト除去</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 母馬履歴 -->
+        <section class="panel panel-history">
+          <div class="panel-title">母馬履歴</div>
+          <div class="history-list">
+            <div class="history-row">
+              <span>履歴１：──万円</span>
+              <button type="button" class="btn btn-secondary">母馬価格に戻す</button>
+            </div>
+            <div class="history-row">
+              <span>履歴２：──万円</span>
+              <button type="button" class="btn btn-secondary">母馬価格に戻す</button>
+            </div>
+            <div class="history-row">
+              <span>履歴３：──万円</span>
+              <button type="button" class="btn btn-secondary">母馬価格に戻す</button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+// 種牡馬データ_ID＋行付き.csv から生成したデータ（CSVを廃止して埋め込み）
+const STALLION_DATA = [
+  {
+    id: '125003',
+    name: 'サンデーサイレンス',
+    initial: 'サ',
+    price: 2500,
+    line: 'サ',
+  },
+  {
+    id: '120002',
+    name: 'ブライアンズタイム',
+    initial: 'フ',
+    price: 2000,
+    line: 'ハ',
+  },
+  {
+    id: '118002',
+    name: 'ノーザンテースト',
+    initial: 'ノ',
+    price: 1800,
+    line: 'ナ',
+  },
+  {
+    id: '115002',
+    name: 'トニービン',
+    initial: 'ト',
+    price: 1500,
+    line: 'タ',
+  },
+  {
+    id: '110004',
+    name: 'リアルシャダイ',
+    initial: 'リ',
+    price: 1000,
+    line: 'ラ',
+  },
+  {
+    id: '109004',
+    name: 'シンボリルドルフ',
+    initial: 'シ',
+    price: 900,
+    line: 'サ',
+  },
+  {
+    id: '108008',
+    name: 'サクラユタカオー',
+    initial: 'サ',
+    price: 800,
+    line: 'サ',
+  },
+  {
+    id: '108009',
+    name: 'ジェイドロバリー',
+    initial: 'シ',
+    price: 800,
+    line: 'サ',
+  },
+  {
+    id: '108010',
+    name: 'マルゼンスキー',
+    initial: 'マ',
+    price: 800,
+    line: 'マ',
+  },
+  {
+    id: '107003',
+    name: 'ヘクタープロテクター',
+    initial: 'ヘ',
+    price: 700,
+    line: 'ハ',
+  },
+  {
+    id: '107004',
+    name: 'ミルジョージ',
+    initial: 'ミ',
+    price: 700,
+    line: 'マ',
+  },
+  {
+    id: '107005',
+    name: 'リヴリア',
+    initial: 'リ',
+    price: 700,
+    line: 'ラ',
+  },
+  {
+    id: '106007',
+    name: 'アンバーシャダイ',
+    initial: 'ア',
+    price: 600,
+    line: 'ア',
+  },
+  {
+    id: '106008',
+    name: 'ダンシングブレーヴ',
+    initial: 'タ',
+    price: 600,
+    line: 'タ',
+  },
+  {
+    id: '106009',
+    name: 'ニホンピロウイナー',
+    initial: 'ニ',
+    price: 600,
+    line: 'ナ',
+  },
+  {
+    id: '106010',
+    name: 'フォーティナイナー',
+    initial: 'フ',
+    price: 600,
+    line: 'ハ',
+  },
+  {
+    id: '106011',
+    name: 'メジロライアン',
+    initial: 'メ',
+    price: 600,
+    line: 'マ',
+  },
+  {
+    id: '106012',
+    name: 'モガミ',
+    initial: 'モ',
+    price: 600,
+    line: 'マ',
+  },
+  {
+    id: '105007',
+    name: 'ウォーニング',
+    initial: 'ウ',
+    price: 500,
+    line: 'ア',
+  },
+  {
+    id: '105008',
+    name: 'スキャン',
+    initial: 'ス',
+    price: 500,
+    line: 'サ',
+  },
+  {
+    id: '105009',
+    name: 'タマモクロス',
+    initial: 'タ',
+    price: 500,
+    line: 'タ',
+  },
+  {
+    id: '105010',
+    name: 'デインヒル',
+    initial: 'テ',
+    price: 500,
+    line: 'タ',
+  },
+  {
+    id: '105011',
+    name: 'ポリッシュネイビー',
+    initial: 'ホ',
+    price: 500,
+    line: 'ハ',
+  },
+  {
+    id: '105012',
+    name: 'モガンボ',
+    initial: 'モ',
+    price: 500,
+    line: 'マ',
+  },
+  {
+    id: '105013',
+    name: 'ラストタイクーン',
+    initial: 'ラ',
+    price: 500,
+    line: 'ラ',
+  },
+  {
+    id: '105014',
+    name: 'リンドシェーバー',
+    initial: 'リ',
+    price: 500,
+    line: 'ラ',
+  },
+  {
+    id: '104501',
+    name: 'クリスタルグリッターズ',
+    initial: 'ク',
+    price: 450,
+    line: 'カ',
+  },
+  {
+    id: '104001',
+    name: 'オグリキャップ',
+    initial: 'オ',
+    price: 400,
+    line: 'ア',
+  },
+  {
+    id: '104002',
+    name: 'キャロルハウス',
+    initial: 'キ',
+    price: 400,
+    line: 'カ',
+  },
+  {
+    id: '104003',
+    name: 'キンググローリアス',
+    initial: 'キ',
+    price: 400,
+    line: 'カ',
+  },
+  {
+    id: '104004',
+    name: 'クリミナルタイプ',
+    initial: 'ク',
+    price: 400,
+    line: 'カ',
+  },
+  {
+    id: '104005',
+    name: 'サッカーボーイ',
+    initial: 'サ',
+    price: 400,
+    line: 'サ',
+  },
+  {
+    id: '104006',
+    name: 'ダンスホール',
+    initial: 'タ',
+    price: 400,
+    line: 'タ',
+  },
+  {
+    id: '104007',
+    name: 'ドクターデヴィアス',
+    initial: 'ト',
+    price: 400,
+    line: 'タ',
+  },
+  {
+    id: '104008',
+    name: 'ナスルエルアラブ',
+    initial: 'ナ',
+    price: 400,
+    line: 'ナ',
+  },
+  {
+    id: '104009',
+    name: 'ミスターシービー',
+    initial: 'ミ',
+    price: 400,
+    line: 'マ',
+  },
+  {
+    id: '104010',
+    name: 'リズム',
+    initial: 'リ',
+    price: 400,
+    line: 'ラ',
+  },
+  {
+    id: '104011',
+    name: 'ロドリゴデトリアーノ',
+    initial: 'ロ',
+    price: 400,
+    line: 'ラ',
+  },
+  {
+    id: '103501',
+    name: 'アサティス',
+    initial: 'ア',
+    price: 350,
+    line: 'ア',
+  },
+  {
+    id: '103502',
+    name: 'アスワン',
+    initial: 'ア',
+    price: 350,
+    line: 'ア',
+  },
+  {
+    id: '103503',
+    name: 'アフリート',
+    initial: 'ア',
+    price: 350,
+    line: 'ア',
+  },
+  {
+    id: '103504',
+    name: 'ジョリーズヘイロー',
+    initial: 'シ',
+    price: 350,
+    line: 'サ',
+  },
+  {
+    id: '103505',
+    name: 'バンブーアトラス',
+    initial: 'ハ',
+    price: 350,
+    line: 'ハ',
+  },
+  {
+    id: '103506',
+    name: 'ロイヤルアカデミー',
+    initial: 'ロ',
+    price: 350,
+    line: 'ラ',
+  },
+  {
+    id: '103001',
+    name: 'エブロス',
+    initial: 'エ',
+    price: 300,
+    line: 'ア',
+  },
+  {
+    id: '103002',
+    name: 'オジジアン',
+    initial: 'オ',
+    price: 300,
+    line: 'ア',
+  },
+  {
+    id: '103003',
+    name: 'グルームダンサー',
+    initial: 'ク',
+    price: 300,
+    line: 'カ',
+  },
+  {
+    id: '103004',
+    name: 'ゴールデンフェザント',
+    initial: 'コ',
+    price: 300,
+    line: 'カ',
+  },
+  {
+    id: '103005',
+    name: 'シェイディハイツ',
+    initial: 'シ',
+    price: 300,
+    line: 'サ',
+  },
+  {
+    id: '103006',
+    name: 'ステートリードン',
+    initial: 'ス',
+    price: 300,
+    line: 'サ',
+  },
+  {
+    id: '103007',
+    name: 'ソヴィエトスター',
+    initial: 'ソ',
+    price: 300,
+    line: 'サ',
+  },
+  {
+    id: '103008',
+    name: 'タイトスポット',
+    initial: 'タ',
+    price: 300,
+    line: 'タ',
+  },
+  {
+    id: '103009',
+    name: 'ダンスオブライフ',
+    initial: 'タ',
+    price: 300,
+    line: 'タ',
+  },
+  {
+    id: '103010',
+    name: 'マイニング',
+    initial: 'マ',
+    price: 300,
+    line: 'マ',
+  },
+  {
+    id: '103011',
+    name: 'ミホシンザン',
+    initial: 'ミ',
+    price: 300,
+    line: 'マ',
+  },
+  {
+    id: '103012',
+    name: 'ヤマニンスキー',
+    initial: 'ヤ',
+    price: 300,
+    line: 'ヤ',
+  },
+  {
+    id: '103013',
+    name: 'ラッキーソヴリン',
+    initial: 'ラ',
+    price: 300,
+    line: 'ラ',
+  },
+  {
+    id: '102601',
+    name: 'ダイナガリバー',
+    initial: 'タ',
+    price: 260,
+    line: 'タ',
+  },
+  {
+    id: '102602',
+    name: 'ノーアテンション',
+    initial: 'ノ',
+    price: 260,
+    line: 'ナ',
+  },
+  {
+    id: '102603',
+    name: 'パークリージェント',
+    initial: 'ハ',
+    price: 260,
+    line: 'ハ',
+  },
+  {
+    id: '102604',
+    name: 'ラシアンルーブル',
+    initial: 'ラ',
+    price: 260,
+    line: 'ラ',
+  },
+  {
+    id: '102605',
+    name: 'ワッスルタッチ',
+    initial: 'ワ',
+    price: 260,
+    line: 'ワ',
+  },
+  {
+    id: '102501',
+    name: 'イルドブルボン',
+    initial: 'イ',
+    price: 250,
+    line: 'ア',
+  },
+  {
+    id: '102502',
+    name: 'カコイーシーズ',
+    initial: 'カ',
+    price: 250,
+    line: 'カ',
+  },
+  {
+    id: '102503',
+    name: 'クリエイター',
+    initial: 'ク',
+    price: 250,
+    line: 'カ',
+  },
+  {
+    id: '102505',
+    name: 'シアトルダンサー',
+    initial: 'シ',
+    price: 250,
+    line: 'サ',
+  },
+  {
+    id: '102504',
+    name: 'シェリフズスター',
+    initial: 'シ',
+    price: 250,
+    line: 'サ',
+  },
+  {
+    id: '102506',
+    name: 'スリルショー',
+    initial: 'ス',
+    price: 250,
+    line: 'サ',
+  },
+  {
+    id: '102507',
+    name: 'ノーリュート',
+    initial: 'ノ',
+    price: 250,
+    line: 'ナ',
+  },
+  {
+    id: '102508',
+    name: 'パレスミュージック',
+    initial: 'ハ',
+    price: 250,
+    line: 'ハ',
+  },
+  {
+    id: '102509',
+    name: 'ビゼンニシキ',
+    initial: 'ヒ',
+    price: 250,
+    line: 'ハ',
+  },
+  {
+    id: '102510',
+    name: 'ホリスキー',
+    initial: 'ホ',
+    price: 250,
+    line: 'ハ',
+  },
+  {
+    id: '102401',
+    name: 'イブンベイ',
+    initial: 'イ',
+    price: 240,
+    line: 'ア',
+  },
+  {
+    id: '102402',
+    name: 'プルラリズム',
+    initial: 'フ',
+    price: 240,
+    line: 'ハ',
+  },
+  {
+    id: '102403',
+    name: 'メジロティターン',
+    initial: 'メ',
+    price: 240,
+    line: 'マ',
+  },
+  {
+    id: '102404',
+    name: 'ルション',
+    initial: 'ル',
+    price: 240,
+    line: 'ラ',
+  },
+  {
+    id: '102405',
+    name: 'ワージブ',
+    initial: 'ワ',
+    price: 240,
+    line: 'ワ',
+  },
+  {
+    id: '102201',
+    name: 'サクラチヨノオー',
+    initial: 'サ',
+    price: 220,
+    line: 'サ',
+  },
+  {
+    id: '102001',
+    name: 'アーティアス',
+    initial: 'ア',
+    price: 200,
+    line: 'ア',
+  },
+  {
+    id: '102002',
+    name: 'アウザール',
+    initial: 'ア',
+    price: 200,
+    line: 'ア',
+  },
+  {
+    id: '102003',
+    name: 'アジュディケーティング',
+    initial: 'ア',
+    price: 200,
+    line: 'ア',
+  },
+  {
+    id: '102004',
+    name: 'アレミロード',
+    initial: 'ア',
+    price: 200,
+    line: 'ア',
+  },
+  {
+    id: '102005',
+    name: 'イナリワン',
+    initial: 'イ',
+    price: 200,
+    line: 'ア',
+  },
+  {
+    id: '102006',
+    name: 'シャーディー',
+    initial: 'シ',
+    price: 200,
+    line: 'サ',
+  },
+  {
+    id: '102008',
+    name: 'ジャッジアンジェルーチ',
+    initial: 'シ',
+    price: 200,
+    line: 'サ',
+  },
+  {
+    id: '102007',
+    name: 'シャルード',
+    initial: 'シ',
+    price: 200,
+    line: 'サ',
+  },
+  {
+    id: '102009',
+    name: 'ストームオンザルース',
+    initial: 'ス',
+    price: 200,
+    line: 'サ',
+  },
+  {
+    id: '102010',
+    name: 'セクレト',
+    initial: 'セ',
+    price: 200,
+    line: 'サ',
+  },
+  {
+    id: '102011',
+    name: 'ダイヤモンドショール',
+    initial: 'タ',
+    price: 200,
+    line: 'タ',
+  },
+  {
+    id: '102012',
+    name: 'テューター',
+    initial: 'テ',
+    price: 200,
+    line: 'タ',
+  },
+  {
+    id: '102013',
+    name: 'テンパレートシル',
+    initial: 'テ',
+    price: 200,
+    line: 'タ',
+  },
+  {
+    id: '102014',
+    name: 'ナグルスキー',
+    initial: 'ナ',
+    price: 200,
+    line: 'ナ',
+  },
+  {
+    id: '102015',
+    name: 'ハギノカムイオー',
+    initial: 'ハ',
+    price: 200,
+    line: 'ハ',
+  },
+  {
+    id: '102016',
+    name: 'パドスール',
+    initial: 'ハ',
+    price: 200,
+    line: 'ハ',
+  },
+  {
+    id: '102017',
+    name: 'フェアジャッジメント',
+    initial: 'フ',
+    price: 200,
+    line: 'ハ',
+  },
+  {
+    id: '102019',
+    name: 'ボーザム',
+    initial: 'ホ',
+    price: 200,
+    line: 'ハ',
+  },
+  {
+    id: '102018',
+    name: 'ホスピタリティ',
+    initial: 'ホ',
+    price: 200,
+    line: 'ハ',
+  },
+  {
+    id: '102020',
+    name: 'マークオブディスティンクション',
+    initial: 'マ',
+    price: 200,
+    line: 'マ',
+  },
+  {
+    id: '102021',
+    name: 'ラグビーボール',
+    initial: 'ラ',
+    price: 200,
+    line: 'ラ',
+  },
+  {
+    id: '101801',
+    name: 'カツラギエース',
+    initial: 'カ',
+    price: 180,
+    line: 'カ',
+  },
+  {
+    id: '101802',
+    name: 'グリーンマウント',
+    initial: 'ク',
+    price: 180,
+    line: 'カ',
+  },
+  {
+    id: '101803',
+    name: 'シェルシュールドール',
+    initial: 'シ',
+    price: 180,
+    line: 'サ',
+  },
+  {
+    id: '101804',
+    name: 'スルーザドラゴン',
+    initial: 'ス',
+    price: 180,
+    line: 'サ',
+  },
+  {
+    id: '101805',
+    name: 'デュラブ',
+    initial: 'テ',
+    price: 180,
+    line: 'タ',
+  },
+  {
+    id: '101806',
+    name: 'ニッポーテイオー',
+    initial: 'ニ',
+    price: 180,
+    line: 'ナ',
+  },
+  {
+    id: '101807',
+    name: 'ノーパスノーセール',
+    initial: 'ノ',
+    price: 180,
+    line: 'ナ',
+  },
+  {
+    id: '101808',
+    name: 'バイアモン',
+    initial: 'ハ',
+    price: 180,
+    line: 'ハ',
+  },
+  {
+    id: '101809',
+    name: 'フォティテン',
+    initial: 'フ',
+    price: 180,
+    line: 'ハ',
+  },
+  {
+    id: '101810',
+    name: 'フラッシュオブスティール',
+    initial: 'フ',
+    price: 180,
+    line: 'ハ',
+  },
+  {
+    id: '101811',
+    name: 'フレンチグローリー',
+    initial: 'フ',
+    price: 180,
+    line: 'ハ',
+  },
+  {
+    id: '101812',
+    name: 'ラシアンボンド',
+    initial: 'ラ',
+    price: 180,
+    line: 'ラ',
+  },
+  {
+    id: '101813',
+    name: 'ロイヤルスキー',
+    initial: 'ロ',
+    price: 180,
+    line: 'ラ',
+  },
+  {
+    id: '101601',
+    name: 'アイシーグルーム',
+    initial: 'ア',
+    price: 160,
+    line: 'ア',
+  },
+  {
+    id: '101602',
+    name: 'スイフトスワロー',
+    initial: 'ス',
+    price: 160,
+    line: 'サ',
+  },
+  {
+    id: '101603',
+    name: 'スマコバクリーク',
+    initial: 'ス',
+    price: 160,
+    line: 'サ',
+  },
+  {
+    id: '101604',
+    name: 'ミルフォード',
+    initial: 'ミ',
+    price: 160,
+    line: 'マ',
+  },
+  {
+    id: '101605',
+    name: 'メリーナイス',
+    initial: 'メ',
+    price: 160,
+    line: 'マ',
+  },
+  {
+    id: '101606',
+    name: 'リーチ',
+    initial: 'リ',
+    price: 160,
+    line: 'ラ',
+  },
+  {
+    id: '101501',
+    name: 'アイネスフウジン',
+    initial: 'ア',
+    price: 150,
+    line: 'ア',
+  },
+  {
+    id: '101502',
+    name: 'インイクストリーミス',
+    initial: 'イ',
+    price: 150,
+    line: 'ア',
+  },
+  {
+    id: '101503',
+    name: 'エルセニョール',
+    initial: 'エ',
+    price: 150,
+    line: 'ア',
+  },
+  {
+    id: '101504',
+    name: 'ガダボート',
+    initial: 'カ',
+    price: 150,
+    line: 'カ',
+  },
+  {
+    id: '101507',
+    name: 'ザーラージル',
+    initial: 'サ',
+    price: 150,
+    line: 'サ',
+  },
+  {
+    id: '101505',
+    name: 'サクラトウコウ',
+    initial: 'サ',
+    price: 150,
+    line: 'サ',
+  },
+  {
+    id: '101506',
+    name: 'サクラホクトオー',
+    initial: 'サ',
+    price: 150,
+    line: 'サ',
+  },
+  {
+    id: '101508',
+    name: 'ダイタクヘリオス',
+    initial: 'タ',
+    price: 150,
+    line: 'タ',
+  },
+  {
+    id: '101509',
+    name: 'ニチドウアラシ',
+    initial: 'ニ',
+    price: 150,
+    line: 'ナ',
+  },
+  {
+    id: '101510',
+    name: 'バンブービギン',
+    initial: 'ハ',
+    price: 150,
+    line: 'ハ',
+  },
+  {
+    id: '101511',
+    name: 'ビショップボブ',
+    initial: 'ヒ',
+    price: 150,
+    line: 'ハ',
+  },
+  {
+    id: '101512',
+    name: 'マジックマイルズ',
+    initial: 'マ',
+    price: 150,
+    line: 'マ',
+  },
+  {
+    id: '101513',
+    name: 'メジロアルダン',
+    initial: 'メ',
+    price: 150,
+    line: 'マ',
+  },
+  {
+    id: '101514',
+    name: 'ワカオライデン',
+    initial: 'ワ',
+    price: 150,
+    line: 'ワ',
+  },
+  {
+    id: '101201',
+    name: 'ウインザーノット',
+    initial: 'ウ',
+    price: 120,
+    line: 'ア',
+  },
+  {
+    id: '101202',
+    name: 'グリーングラス',
+    initial: 'ク',
+    price: 120,
+    line: 'カ',
+  },
+  {
+    id: '101203',
+    name: 'サンキリコ',
+    initial: 'サ',
+    price: 120,
+    line: 'サ',
+  },
+  {
+    id: '101204',
+    name: 'スーパークリーク',
+    initial: 'ス',
+    price: 120,
+    line: 'サ',
+  },
+  {
+    id: '101205',
+    name: 'タップオンウッド',
+    initial: 'タ',
+    price: 120,
+    line: 'タ',
+  },
+  {
+    id: '101206',
+    name: 'ナトルーン',
+    initial: 'ナ',
+    price: 120,
+    line: 'ナ',
+  },
+  {
+    id: '101207',
+    name: 'ムーンマッドネス',
+    initial: 'ム',
+    price: 120,
+    line: 'マ',
+  },
+  {
+    id: '101208',
+    name: 'ムクター',
+    initial: 'ム',
+    price: 120,
+    line: 'マ',
+  },
+  {
+    id: '101209',
+    name: 'リードワンダー',
+    initial: 'リ',
+    price: 120,
+    line: 'ラ',
+  },
+  {
+    id: '101001',
+    name: 'グランドオペラ',
+    initial: 'ク',
+    price: 100,
+    line: 'カ',
+  },
+  {
+    id: '101002',
+    name: 'グロウ',
+    initial: 'ク',
+    price: 100,
+    line: 'カ',
+  },
+  {
+    id: '101003',
+    name: 'ゲイメセン',
+    initial: 'ケ',
+    price: 100,
+    line: 'カ',
+  },
+  {
+    id: '101004',
+    name: 'ゴライタス',
+    initial: 'コ',
+    price: 100,
+    line: 'カ',
+  },
+  {
+    id: '101005',
+    name: 'トレボロ',
+    initial: 'ト',
+    price: 100,
+    line: 'タ',
+  },
+  {
+    id: '101006',
+    name: 'トロメオ',
+    initial: 'ト',
+    price: 100,
+    line: 'タ',
+  },
+  {
+    id: '101007',
+    name: 'メイワパッサー',
+    initial: 'メ',
+    price: 100,
+    line: 'マ',
+  },
+  {
+    id: '101008',
+    name: 'メジロイーグル',
+    initial: 'メ',
+    price: 100,
+    line: 'マ',
+  },
+  {
+    id: '101009',
+    name: 'ヤエノムテキ',
+    initial: 'ヤ',
+    price: 100,
+    line: 'ヤ',
+  },
+  {
+    id: '101010',
+    name: 'ランズダーン',
+    initial: 'ラ',
+    price: 100,
+    line: 'ラ',
+  },
+  {
+    id: '101011',
+    name: 'ランドヒリュウ',
+    initial: 'ラ',
+    price: 100,
+    line: 'ラ',
+  },
+  {
+    id: '100901',
+    name: 'ダイナコスモス',
+    initial: 'タ',
+    price: 90,
+    line: 'タ',
+  },
+  {
+    id: '100902',
+    name: 'バンブーメモリー',
+    initial: 'ハ',
+    price: 90,
+    line: 'ハ',
+  },
+  {
+    id: '100801',
+    name: 'ギャロップダイナ',
+    initial: 'キ',
+    price: 80,
+    line: 'カ',
+  },
+  {
+    id: '100802',
+    name: 'シリウスシンボリ',
+    initial: 'シ',
+    price: 80,
+    line: 'サ',
+  },
+  {
+    id: '100803',
+    name: 'スズパレード',
+    initial: 'ス',
+    price: 80,
+    line: 'サ',
+  },
+  {
+    id: '100804',
+    name: 'ニシノエトランゼ',
+    initial: 'ニ',
+    price: 80,
+    line: 'ナ',
+  },
+  {
+    id: '100805',
+    name: 'ニシノライデン',
+    initial: 'ニ',
+    price: 80,
+    line: 'ナ',
+  },
+  {
+    id: '100806',
+    name: 'ランニングフリー',
+    initial: 'ラ',
+    price: 80,
+    line: 'ラ',
+  },
+  {
+    id: '100807',
+    name: 'レジェンドテイオー',
+    initial: 'レ',
+    price: 80,
+    line: 'ラ',
+  },
+  {
+    id: '100701',
+    name: 'アズマイースト',
+    initial: 'ア',
+    price: 70,
+    line: 'ア',
+  },
+  {
+    id: '100702',
+    name: 'サクラサニーオー',
+    initial: 'サ',
+    price: 70,
+    line: 'サ',
+  },
+  {
+    id: '100703',
+    name: 'サンテステフ',
+    initial: 'サ',
+    price: 70,
+    line: 'サ',
+  },
+  {
+    id: '100704',
+    name: 'ダイナサンキュー',
+    initial: 'タ',
+    price: 70,
+    line: 'タ',
+  },
+  {
+    id: '100705',
+    name: 'トウショウサミット',
+    initial: 'ト',
+    price: 70,
+    line: 'タ',
+  },
+  {
+    id: '100601',
+    name: 'アンドレアモン',
+    initial: 'ア',
+    price: 60,
+    line: 'ア',
+  },
+  {
+    id: '100602',
+    name: 'スプレンディドモーメント',
+    initial: 'ス',
+    price: 60,
+    line: 'サ',
+  },
+  {
+    id: '100603',
+    name: 'セントシーザー',
+    initial: 'セ',
+    price: 60,
+    line: 'サ',
+  },
+  {
+    id: '100604',
+    name: 'トウショウペガサス',
+    initial: 'ト',
+    price: 60,
+    line: 'タ',
+  },
+  {
+    id: '100605',
+    name: 'フジノフウウン',
+    initial: 'フ',
+    price: 60,
+    line: 'ハ',
+  },
+  {
+    id: '100606',
+    name: 'ヘイルシャム',
+    initial: 'ヘ',
+    price: 60,
+    line: 'ハ',
+  },
+  {
+    id: '100501',
+    name: 'アサカシルバー',
+    initial: 'ア',
+    price: 50,
+    line: 'ア',
+  },
+  {
+    id: '100502',
+    name: 'アサヒエンペラー',
+    initial: 'ア',
+    price: 50,
+    line: 'ア',
+  },
+  {
+    id: '100503',
+    name: 'カッティングブレード',
+    initial: 'カ',
+    price: 50,
+    line: 'カ',
+  },
+  {
+    id: '100504',
+    name: 'グレートローマン',
+    initial: 'ク',
+    price: 50,
+    line: 'カ',
+  },
+  {
+    id: '100505',
+    name: 'サクラロータリー',
+    initial: 'サ',
+    price: 50,
+    line: 'サ',
+  },
+  {
+    id: '100506',
+    name: 'ダイユウサク',
+    initial: 'タ',
+    price: 50,
+    line: 'タ',
+  },
+  {
+    id: '100507',
+    name: 'テュデナムキング',
+    initial: 'テ',
+    price: 50,
+    line: 'タ',
+  },
+  {
+    id: '100508',
+    name: 'プレクラスニー',
+    initial: 'フ',
+    price: 50,
+    line: 'ハ',
+  },
+  {
+    id: '100509',
+    name: 'ミュージックタイム',
+    initial: 'ミ',
+    price: 50,
+    line: 'マ',
+  },
+  {
+    id: '100510',
+    name: 'ヤワ',
+    initial: 'ヤ',
+    price: 50,
+    line: 'ヤ',
+  },
+  {
+    id: '100401',
+    name: 'カウンテスアップ',
+    initial: 'カ',
+    price: 40,
+    line: 'カ',
+  },
+  {
+    id: '100402',
+    name: 'キヨヒダカ',
+    initial: 'キ',
+    price: 40,
+    line: 'カ',
+  },
+  {
+    id: '100403',
+    name: 'ゴールドレット',
+    initial: 'コ',
+    price: 40,
+    line: 'カ',
+  },
+  {
+    id: '100404',
+    name: 'ダイシンフブキ',
+    initial: 'タ',
+    price: 40,
+    line: 'タ',
+  },
+  {
+    id: '100405',
+    name: 'ハクタイセイ',
+    initial: 'ハ',
+    price: 40,
+    line: 'ハ',
+  },
+  {
+    id: '100406',
+    name: 'ホクトヘリオス',
+    initial: 'ホ',
+    price: 40,
+    line: 'ハ',
+  },
+  {
+    id: '100301',
+    name: 'カツラノハイセイコ',
+    initial: 'カ',
+    price: 30,
+    line: 'カ',
+  },
+  {
+    id: '100302',
+    name: 'コトノアサブキ',
+    initial: 'コ',
+    price: 30,
+    line: 'カ',
+  },
+  {
+    id: '100303',
+    name: 'ステートジャガー',
+    initial: 'ス',
+    price: 30,
+    line: 'サ',
+  },
+  {
+    id: '100304',
+    name: 'ターナボス',
+    initial: 'タ',
+    price: 30,
+    line: 'タ',
+  },
+  {
+    id: '100305',
+    name: 'ハヤテミグ',
+    initial: 'ハ',
+    price: 30,
+    line: 'ハ',
+  },
+  {
+    id: '100306',
+    name: 'メジロデュレン',
+    initial: 'メ',
+    price: 30,
+    line: 'マ',
+  },
+  {
+    id: '100307',
+    name: 'メジロモンスニー',
+    initial: 'メ',
+    price: 30,
+    line: 'マ',
+  },
+  {
+    id: '100308',
+    name: 'モンテプリンス',
+    initial: 'モ',
+    price: 30,
+    line: 'マ',
+  },
+  {
+    id: '100309',
+    name: 'ライフタテヤマ',
+    initial: 'ラ',
+    price: 30,
+    line: 'ラ',
+  },
+  {
+    id: '100310',
+    name: 'リードホーユー',
+    initial: 'リ',
+    price: 30,
+    line: 'ラ',
+  },
+  {
+    id: '100311',
+    name: 'レッツゴーターキン',
+    initial: 'レ',
+    price: 30,
+    line: 'ラ',
+  },
+  {
+    id: '100001',
+    name: 'ムーンライトパレス',
+    initial: 'ム',
+    price: 0,
+    line: 'マ',
+  },
+  {
+    id: '125001',
+    name: 'Danzig',
+    initial: 'D',
+    price: 2500,
+    line: 'A',
+  },
+  {
+    id: '125002',
+    name: 'Sadler\'s Wells',
+    initial: 'S',
+    price: 2500,
+    line: 'A',
+  },
+  {
+    id: '122001',
+    name: 'Caerleon',
+    initial: 'C',
+    price: 2200,
+    line: 'A',
+  },
+  {
+    id: '122002',
+    name: 'Nureyev',
+    initial: 'N',
+    price: 2200,
+    line: 'A',
+  },
+  {
+    id: '122003',
+    name: 'Storm Cat',
+    initial: 'S',
+    price: 2200,
+    line: 'A',
+  },
+  {
+    id: '120001',
+    name: 'Seeking the Gold',
+    initial: 'S',
+    price: 2000,
+    line: 'A',
+  },
+  {
+    id: '118001',
+    name: 'Gone West',
+    initial: 'G',
+    price: 1800,
+    line: 'A',
+  },
+  {
+    id: '115001',
+    name: 'Woodman',
+    initial: 'W',
+    price: 1500,
+    line: 'A',
+  },
+  {
+    id: '114001',
+    name: 'Theatrical',
+    initial: 'T',
+    price: 1400,
+    line: 'A',
+  },
+  {
+    id: '113001',
+    name: 'Unbridled',
+    initial: 'U',
+    price: 1300,
+    line: 'A',
+  },
+  {
+    id: '112001',
+    name: 'Machiavellian',
+    initial: 'M',
+    price: 1200,
+    line: 'A',
+  },
+  {
+    id: '112002',
+    name: 'Rahy',
+    initial: 'R',
+    price: 1200,
+    line: 'A',
+  },
+  {
+    id: '112003',
+    name: 'Rainbow Quest',
+    initial: 'R',
+    price: 1200,
+    line: 'A',
+  },
+  {
+    id: '110001',
+    name: 'Fairy King',
+    initial: 'F',
+    price: 1000,
+    line: 'A',
+  },
+  {
+    id: '110002',
+    name: 'Gulch',
+    initial: 'G',
+    price: 1000,
+    line: 'A',
+  },
+  {
+    id: '110003',
+    name: 'Pleasant Colony',
+    initial: 'P',
+    price: 1000,
+    line: 'A',
+  },
+  {
+    id: '109001',
+    name: 'A.P.Indy',
+    initial: 'A',
+    price: 900,
+    line: 'A',
+  },
+  {
+    id: '109002',
+    name: 'Indian Ridge',
+    initial: 'I',
+    price: 900,
+    line: 'A',
+  },
+  {
+    id: '109003',
+    name: 'Mt.Livermore',
+    initial: 'M',
+    price: 900,
+    line: 'A',
+  },
+  {
+    id: '108001',
+    name: 'Capote',
+    initial: 'C',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '108002',
+    name: 'Cozzene',
+    initial: 'C',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '108003',
+    name: 'Phone Trick',
+    initial: 'P',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '108004',
+    name: 'Red Ransom',
+    initial: 'R',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '108005',
+    name: 'Relaunch',
+    initial: 'R',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '108006',
+    name: 'Risen Star',
+    initial: 'R',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '108007',
+    name: 'Wild Again',
+    initial: 'W',
+    price: 800,
+    line: 'A',
+  },
+  {
+    id: '107001',
+    name: 'Broad Brush',
+    initial: 'B',
+    price: 700,
+    line: 'A',
+  },
+  {
+    id: '107002',
+    name: 'Green Desert',
+    initial: 'G',
+    price: 700,
+    line: 'A',
+  },
+  {
+    id: '106001',
+    name: 'Darshaan',
+    initial: 'D',
+    price: 600,
+    line: 'A',
+  },
+  {
+    id: '106002',
+    name: 'Devil\'s Bag',
+    initial: 'D',
+    price: 600,
+    line: 'A',
+  },
+  {
+    id: '106003',
+    name: 'Diesis',
+    initial: 'D',
+    price: 600,
+    line: 'A',
+  },
+  {
+    id: '106004',
+    name: 'El Gran Senor',
+    initial: 'E',
+    price: 600,
+    line: 'A',
+  },
+  {
+    id: '106005',
+    name: 'Highest Honor',
+    initial: 'H',
+    price: 600,
+    line: 'A',
+  },
+  {
+    id: '106006',
+    name: 'Slew o\'Gold',
+    initial: 'S',
+    price: 600,
+    line: 'A',
+  },
+  {
+    id: '105001',
+    name: 'Bering',
+    initial: 'B',
+    price: 500,
+    line: 'A',
+  },
+  {
+    id: '105002',
+    name: 'Black Tie Affair',
+    initial: 'B',
+    price: 500,
+    line: 'A',
+  },
+  {
+    id: '105003',
+    name: 'Linamix',
+    initial: 'L',
+    price: 500,
+    line: 'A',
+  },
+  {
+    id: '105004',
+    name: 'Mtoto',
+    initial: 'M',
+    price: 500,
+    line: 'A',
+  },
+  {
+    id: '105005',
+    name: 'Spend a Buck',
+    initial: 'S',
+    price: 500,
+    line: 'A',
+  },
+  {
+    id: '105006',
+    name: 'Tropular',
+    initial: 'T',
+    price: 500,
+    line: 'A',
+  },
+];
+
+if (typeof window !== 'undefined') {
+  window.STALLION_DATA = STALLION_DATA;
+}
+
+</script>
+<script>
+// 繁殖牝馬データ_ID＋行付き.csv から生成したデータ（CSVを廃止して埋め込み）
+const MARE_DATA = [
+  {
+    id: '200501',
+    name: 'アンチョビー',
+    initial: 'ア',
+    price: 500,
+    line: 'ア',
+  },
+  {
+    id: '200503',
+    name: 'ポテトグラタン',
+    initial: 'ホ',
+    price: 500,
+    line: 'ハ',
+  },
+  {
+    id: '200502',
+    name: 'スクールサンデー',
+    initial: 'ス',
+    price: 500,
+    line: 'サ',
+  },
+  {
+    id: '200601',
+    name: 'クリヨンルージュ',
+    initial: 'ク',
+    price: 600,
+    line: 'カ',
+  },
+  {
+    id: '200602',
+    name: 'ミスペダントリー',
+    initial: 'ミ',
+    price: 600,
+    line: 'マ',
+  },
+  {
+    id: '200604',
+    name: 'メリケンオタマ',
+    initial: 'メ',
+    price: 600,
+    line: 'マ',
+  },
+  {
+    id: '200603',
+    name: 'ミナモトシズカ',
+    initial: 'ミ',
+    price: 600,
+    line: 'マ',
+  },
+  {
+    id: '200702',
+    name: 'アイマイミーマイン',
+    initial: 'ア',
+    price: 700,
+    line: 'ア',
+  },
+  {
+    id: '200704',
+    name: 'テーブルワイン',
+    initial: 'テ',
+    price: 700,
+    line: 'タ',
+  },
+  {
+    id: '200707',
+    name: 'ペットボトル',
+    initial: 'ヘ',
+    price: 700,
+    line: 'ハ',
+  },
+  {
+    id: '200701',
+    name: 'アイスペール',
+    initial: 'ア',
+    price: 700,
+    line: 'ア',
+  },
+  {
+    id: '200708',
+    name: 'ミズノアーチ',
+    initial: 'ミ',
+    price: 700,
+    line: 'マ',
+  },
+  {
+    id: '200703',
+    name: 'エドムラサキ',
+    initial: 'エ',
+    price: 700,
+    line: 'ア',
+  },
+  {
+    id: '200706',
+    name: 'ノーマジーン',
+    initial: 'ノ',
+    price: 700,
+    line: 'ナ',
+  },
+  {
+    id: '200705',
+    name: 'ニフティサービス',
+    initial: 'ニ',
+    price: 700,
+    line: 'ナ',
+  },
+  {
+    id: '200809',
+    name: 'シルクランジェリー',
+    initial: 'シ',
+    price: 800,
+    line: 'サ',
+  },
+  {
+    id: '200806',
+    name: 'コデマリ',
+    initial: 'コ',
+    price: 800,
+    line: 'カ',
+  },
+  {
+    id: '200803',
+    name: 'キャットミント',
+    initial: 'キ',
+    price: 800,
+    line: 'カ',
+  },
+  {
+    id: '200813',
+    name: 'ハニーフラッシュ',
+    initial: 'ハ',
+    price: 800,
+    line: 'ハ',
+  },
+  {
+    id: '200810',
+    name: 'ジャスミンティー',
+    initial: 'シ',
+    price: 800,
+    line: 'サ',
+  },
+  {
+    id: '200815',
+    name: 'ペペロンチーノ',
+    initial: 'ヘ',
+    price: 800,
+    line: 'ハ',
+  },
+  {
+    id: '200811',
+    name: 'タケノマジック',
+    initial: 'タ',
+    price: 800,
+    line: 'タ',
+  },
+  {
+    id: '200808',
+    name: 'シャンポンマーチ',
+    initial: 'シ',
+    price: 800,
+    line: 'サ',
+  },
+  {
+    id: '200807',
+    name: 'ゴンニノチッチ',
+    initial: 'コ',
+    price: 800,
+    line: 'カ',
+  },
+  {
+    id: '200804',
+    name: 'キルトクール',
+    initial: 'キ',
+    price: 800,
+    line: 'カ',
+  },
+  {
+    id: '200801',
+    name: 'ウインターミュート',
+    initial: 'ウ',
+    price: 800,
+    line: 'ア',
+  },
+  {
+    id: '200814',
+    name: 'バルサミコ',
+    initial: 'ハ',
+    price: 800,
+    line: 'ハ',
+  },
+  {
+    id: '200802',
+    name: 'オオシマナギサ',
+    initial: 'オ',
+    price: 800,
+    line: 'ア',
+  },
+  {
+    id: '200805',
+    name: 'グリニッジビレッジ',
+    initial: 'ク',
+    price: 800,
+    line: 'カ',
+  },
+  {
+    id: '200812',
+    name: 'チーチャマーク',
+    initial: 'チ',
+    price: 800,
+    line: 'タ',
+  },
+  {
+    id: '200816',
+    name: 'レッツツイスト',
+    initial: 'レ',
+    price: 800,
+    line: 'ラ',
+  },
+  {
+    id: '200901',
+    name: 'サザンサンキュー',
+    initial: 'サ',
+    price: 900,
+    line: 'サ',
+  },
+  {
+    id: '200903',
+    name: 'ユーレイルパス',
+    initial: 'ユ',
+    price: 900,
+    line: 'ヤ',
+  },
+  {
+    id: '200904',
+    name: 'レイニーバカンス',
+    initial: 'レ',
+    price: 900,
+    line: 'ラ',
+  },
+  {
+    id: '200902',
+    name: 'ビターエスプレッソ',
+    initial: 'ヒ',
+    price: 900,
+    line: 'ハ',
+  },
+  {
+    id: '201013',
+    name: 'ロンパールーム',
+    initial: 'ロ',
+    price: 1000,
+    line: 'ラ',
+  },
+  {
+    id: '201001',
+    name: 'アスキーパートツー',
+    initial: 'ア',
+    price: 1000,
+    line: 'ア',
+  },
+  {
+    id: '201007',
+    name: 'ヒステリック',
+    initial: 'ヒ',
+    price: 1000,
+    line: 'ハ',
+  },
+  {
+    id: '201012',
+    name: 'ミリオンキッス',
+    initial: 'ミ',
+    price: 1000,
+    line: 'マ',
+  },
+  {
+    id: '201010',
+    name: 'プレミアムグッズ',
+    initial: 'フ',
+    price: 1000,
+    line: 'ハ',
+  },
+  {
+    id: '201006',
+    name: 'ハニーカステラ',
+    initial: 'ハ',
+    price: 1000,
+    line: 'ハ',
+  },
+  {
+    id: '201009',
+    name: 'ブートストラップ',
+    initial: 'フ',
+    price: 1000,
+    line: 'ハ',
+  },
+  {
+    id: '201003',
+    name: 'ゴールドシラナミ',
+    initial: 'コ',
+    price: 1000,
+    line: 'カ',
+  },
+  {
+    id: '201002',
+    name: 'カノン',
+    initial: 'カ',
+    price: 1000,
+    line: 'カ',
+  },
+  {
+    id: '201011',
+    name: 'ポートセルミ',
+    initial: 'ホ',
+    price: 1000,
+    line: 'ハ',
+  },
+  {
+    id: '201008',
+    name: 'ヒメギミ',
+    initial: 'ヒ',
+    price: 1000,
+    line: 'ハ',
+  },
+  {
+    id: '201005',
+    name: 'ナホコ',
+    initial: 'ナ',
+    price: 1000,
+    line: 'ナ',
+  },
+  {
+    id: '201004',
+    name: 'スパイスオブライフ',
+    initial: 'ス',
+    price: 1000,
+    line: 'サ',
+  },
+  {
+    id: '201101',
+    name: 'テレホンリクエスト',
+    initial: 'テ',
+    price: 1100,
+    line: 'タ',
+  },
+  {
+    id: '201102',
+    name: 'ブルーノート',
+    initial: 'フ',
+    price: 1100,
+    line: 'ハ',
+  },
+  {
+    id: '201207',
+    name: 'ヒッチハイク',
+    initial: 'ヒ',
+    price: 1200,
+    line: 'ハ',
+  },
+  {
+    id: '201210',
+    name: 'リヴレットローザ',
+    initial: 'リ',
+    price: 1200,
+    line: 'ラ',
+  },
+  {
+    id: '201201',
+    name: 'アフタヌーンブリーズ',
+    initial: 'ア',
+    price: 1200,
+    line: 'ア',
+  },
+  {
+    id: '201206',
+    name: 'バンビーナ',
+    initial: 'ハ',
+    price: 1200,
+    line: 'ハ',
+  },
+  {
+    id: '201204',
+    name: 'ディープグリーフ',
+    initial: 'テ',
+    price: 1200,
+    line: 'タ',
+  },
+  {
+    id: '201205',
+    name: 'トライミー',
+    initial: 'ト',
+    price: 1200,
+    line: 'タ',
+  },
+  {
+    id: '201202',
+    name: 'シュガーオンミー',
+    initial: 'シ',
+    price: 1200,
+    line: 'サ',
+  },
+  {
+    id: '201203',
+    name: 'スキップフロア',
+    initial: 'ス',
+    price: 1200,
+    line: 'サ',
+  },
+  {
+    id: '201209',
+    name: 'ホワイトリカー',
+    initial: 'ホ',
+    price: 1200,
+    line: 'ハ',
+  },
+  {
+    id: '201208',
+    name: 'プリム',
+    initial: 'フ',
+    price: 1200,
+    line: 'ハ',
+  },
+  {
+    id: '201301',
+    name: 'チーズストロー',
+    initial: 'チ',
+    price: 1300,
+    line: 'タ',
+  },
+  {
+    id: '201302',
+    name: 'マルチナスコート',
+    initial: 'マ',
+    price: 1300,
+    line: 'マ',
+  },
+  {
+    id: '201406',
+    name: 'シンデレラリバティ',
+    initial: 'シ',
+    price: 1400,
+    line: 'サ',
+  },
+  {
+    id: '201403',
+    name: 'キリタンポ',
+    initial: 'キ',
+    price: 1400,
+    line: 'カ',
+  },
+  {
+    id: '201401',
+    name: 'ウイスキーボンボン',
+    initial: 'ウ',
+    price: 1400,
+    line: 'ア',
+  },
+  {
+    id: '201408',
+    name: 'スキャットルル',
+    initial: 'ス',
+    price: 1400,
+    line: 'サ',
+  },
+  {
+    id: '201405',
+    name: 'シッポナ',
+    initial: 'シ',
+    price: 1400,
+    line: 'サ',
+  },
+  {
+    id: '201409',
+    name: 'レインボードレス',
+    initial: 'レ',
+    price: 1400,
+    line: 'ラ',
+  },
+  {
+    id: '201402',
+    name: 'エンジェルウインク',
+    initial: 'エ',
+    price: 1400,
+    line: 'ア',
+  },
+  {
+    id: '201407',
+    name: 'ジュムレプラッセ',
+    initial: 'シ',
+    price: 1400,
+    line: 'サ',
+  },
+  {
+    id: '201404',
+    name: 'ギャランティフリー',
+    initial: 'キ',
+    price: 1400,
+    line: 'カ',
+  },
+  {
+    id: '201502',
+    name: 'ティンカーベル',
+    initial: 'テ',
+    price: 1500,
+    line: 'タ',
+  },
+  {
+    id: '201503',
+    name: 'メリーゴーランド',
+    initial: 'メ',
+    price: 1500,
+    line: 'マ',
+  },
+  {
+    id: '201501',
+    name: 'インフラレッドレイ',
+    initial: 'イ',
+    price: 1500,
+    line: 'ア',
+  },
+  {
+    id: '201609',
+    name: 'ユミサヤカ',
+    initial: 'ユ',
+    price: 1600,
+    line: 'ヤ',
+  },
+  {
+    id: '201601',
+    name: 'カシューナッツ',
+    initial: 'カ',
+    price: 1600,
+    line: 'カ',
+  },
+  {
+    id: '201603',
+    name: 'シーディードライブ',
+    initial: 'シ',
+    price: 1600,
+    line: 'サ',
+  },
+  {
+    id: '201604',
+    name: 'タイトスカート',
+    initial: 'タ',
+    price: 1600,
+    line: 'タ',
+  },
+  {
+    id: '201610',
+    name: 'リゾートマンション',
+    initial: 'リ',
+    price: 1600,
+    line: 'ラ',
+  },
+  {
+    id: '201608',
+    name: 'ミスフォトジェニック',
+    initial: 'ミ',
+    price: 1600,
+    line: 'マ',
+  },
+  {
+    id: '201611',
+    name: 'リリーペガサス',
+    initial: 'リ',
+    price: 1600,
+    line: 'ラ',
+  },
+  {
+    id: '201607',
+    name: 'ミカエリビジン',
+    initial: 'ミ',
+    price: 1600,
+    line: 'マ',
+  },
+  {
+    id: '201605',
+    name: 'ベルギーチコリ',
+    initial: 'ヘ',
+    price: 1600,
+    line: 'ハ',
+  },
+  {
+    id: '201606',
+    name: 'ポケットマネー',
+    initial: 'ホ',
+    price: 1600,
+    line: 'ハ',
+  },
+  {
+    id: '201602',
+    name: 'コロポックル',
+    initial: 'コ',
+    price: 1600,
+    line: 'カ',
+  },
+  {
+    id: '201806',
+    name: 'サンドウィッチ',
+    initial: 'サ',
+    price: 1800,
+    line: 'サ',
+  },
+  {
+    id: '201813',
+    name: 'プレッピールック',
+    initial: 'フ',
+    price: 1800,
+    line: 'ハ',
+  },
+  {
+    id: '201812',
+    name: 'フォルクローレ',
+    initial: 'フ',
+    price: 1800,
+    line: 'ハ',
+  },
+  {
+    id: '201801',
+    name: 'アイノコリドー',
+    initial: 'ア',
+    price: 1800,
+    line: 'ア',
+  },
+  {
+    id: '201802',
+    name: 'オートシッピング',
+    initial: 'オ',
+    price: 1800,
+    line: 'ア',
+  },
+  {
+    id: '201804',
+    name: 'オカリナ',
+    initial: 'オ',
+    price: 1800,
+    line: 'ア',
+  },
+  {
+    id: '201810',
+    name: 'ハンモック',
+    initial: 'ハ',
+    price: 1800,
+    line: 'ハ',
+  },
+  {
+    id: '201815',
+    name: 'マジックナンバー',
+    initial: 'マ',
+    price: 1800,
+    line: 'マ',
+  },
+  {
+    id: '201808',
+    name: 'ニジノエアロビ',
+    initial: 'ニ',
+    price: 1800,
+    line: 'ナ',
+  },
+  {
+    id: '201807',
+    name: 'ナンブフーリン',
+    initial: 'ナ',
+    price: 1800,
+    line: 'ナ',
+  },
+  {
+    id: '201811',
+    name: 'パーティージョーク',
+    initial: 'ハ',
+    price: 1800,
+    line: 'ハ',
+  },
+  {
+    id: '201809',
+    name: 'ヌーンブライト',
+    initial: 'ヌ',
+    price: 1800,
+    line: 'ナ',
+  },
+  {
+    id: '201803',
+    name: 'オードパルファム',
+    initial: 'オ',
+    price: 1800,
+    line: 'ア',
+  },
+  {
+    id: '201816',
+    name: 'ミルキーテースト',
+    initial: 'ミ',
+    price: 1800,
+    line: 'マ',
+  },
+  {
+    id: '201814',
+    name: 'マイナーペナルティ',
+    initial: 'マ',
+    price: 1800,
+    line: 'マ',
+  },
+  {
+    id: '201805',
+    name: 'コーヒールンバ',
+    initial: 'コ',
+    price: 1800,
+    line: 'カ',
+  },
+  {
+    id: '202005',
+    name: 'スイートプラシーボ',
+    initial: 'ス',
+    price: 2000,
+    line: 'サ',
+  },
+  {
+    id: '202003',
+    name: 'キタノオドリコ',
+    initial: 'キ',
+    price: 2000,
+    line: 'カ',
+  },
+  {
+    id: '202011',
+    name: 'マイナーレーベル',
+    initial: 'マ',
+    price: 2000,
+    line: 'マ',
+  },
+  {
+    id: '202012',
+    name: 'マキノハミング',
+    initial: 'マ',
+    price: 2000,
+    line: 'マ',
+  },
+  {
+    id: '202014',
+    name: 'リトグラフ',
+    initial: 'リ',
+    price: 2000,
+    line: 'ラ',
+  },
+  {
+    id: '202001',
+    name: 'ウォッカライム',
+    initial: 'ウ',
+    price: 2000,
+    line: 'ア',
+  },
+  {
+    id: '202010',
+    name: 'ブルーフォーカス',
+    initial: 'フ',
+    price: 2000,
+    line: 'ハ',
+  },
+  {
+    id: '202007',
+    name: 'チキチータ',
+    initial: 'チ',
+    price: 2000,
+    line: 'タ',
+  },
+  {
+    id: '202004',
+    name: 'キヌノホトリ',
+    initial: 'キ',
+    price: 2000,
+    line: 'カ',
+  },
+  {
+    id: '202008',
+    name: 'ディヒターリーベ',
+    initial: 'テ',
+    price: 2000,
+    line: 'タ',
+  },
+  {
+    id: '202009',
+    name: 'ニイカップギャル',
+    initial: 'ニ',
+    price: 2000,
+    line: 'ナ',
+  },
+  {
+    id: '202002',
+    name: 'オーマイナポリタン',
+    initial: 'オ',
+    price: 2000,
+    line: 'ア',
+  },
+  {
+    id: '202013',
+    name: 'リスキーガール',
+    initial: 'リ',
+    price: 2000,
+    line: 'ラ',
+  },
+  {
+    id: '202006',
+    name: 'ステージママ',
+    initial: 'ス',
+    price: 2000,
+    line: 'サ',
+  },
+  {
+    id: '202206',
+    name: 'ランランクリック',
+    initial: 'ラ',
+    price: 2200,
+    line: 'ラ',
+  },
+  {
+    id: '202208',
+    name: 'ワンモアドリンク',
+    initial: 'ワ',
+    price: 2200,
+    line: 'ワ',
+  },
+  {
+    id: '202207',
+    name: 'リリックスマイル',
+    initial: 'リ',
+    price: 2200,
+    line: 'ラ',
+  },
+  {
+    id: '202204',
+    name: 'ベッピンキャロル',
+    initial: 'ヘ',
+    price: 2200,
+    line: 'ハ',
+  },
+  {
+    id: '202205',
+    name: 'メロディー',
+    initial: 'メ',
+    price: 2200,
+    line: 'マ',
+  },
+  {
+    id: '202201',
+    name: 'スリークッション',
+    initial: 'ス',
+    price: 2200,
+    line: 'サ',
+  },
+  {
+    id: '202203',
+    name: 'ピーチタイム',
+    initial: 'ヒ',
+    price: 2200,
+    line: 'ハ',
+  },
+  {
+    id: '202202',
+    name: 'パンドラ',
+    initial: 'ハ',
+    price: 2200,
+    line: 'ハ',
+  },
+  {
+    id: '202404',
+    name: 'カバリエリエール',
+    initial: 'カ',
+    price: 2400,
+    line: 'カ',
+  },
+  {
+    id: '202402',
+    name: 'イズミマイヒメ',
+    initial: 'イ',
+    price: 2400,
+    line: 'ア',
+  },
+  {
+    id: '202408',
+    name: 'フキノトウ',
+    initial: 'フ',
+    price: 2400,
+    line: 'ハ',
+  },
+  {
+    id: '202401',
+    name: 'アメリカンナデシコ',
+    initial: 'ア',
+    price: 2400,
+    line: 'ア',
+  },
+  {
+    id: '202409',
+    name: 'プリンセスビスチェ',
+    initial: 'フ',
+    price: 2400,
+    line: 'ハ',
+  },
+  {
+    id: '202407',
+    name: 'バニティケース',
+    initial: 'ハ',
+    price: 2400,
+    line: 'ハ',
+  },
+  {
+    id: '202403',
+    name: 'オンパレード',
+    initial: 'オ',
+    price: 2400,
+    line: 'ア',
+  },
+  {
+    id: '202406',
+    name: 'ダイレクトメール',
+    initial: 'タ',
+    price: 2400,
+    line: 'タ',
+  },
+  {
+    id: '202405',
+    name: 'タマノホリデー',
+    initial: 'タ',
+    price: 2400,
+    line: 'タ',
+  },
+  {
+    id: '202502',
+    name: 'シルエットシャドー',
+    initial: 'シ',
+    price: 2500,
+    line: 'サ',
+  },
+  {
+    id: '202503',
+    name: 'リップクリーム',
+    initial: 'リ',
+    price: 2500,
+    line: 'ラ',
+  },
+  {
+    id: '202501',
+    name: 'イミテーションゴールド',
+    initial: 'イ',
+    price: 2500,
+    line: 'ア',
+  },
+  {
+    id: '202504',
+    name: 'ルーズソックス',
+    initial: 'ル',
+    price: 2500,
+    line: 'ラ',
+  },
+  {
+    id: '202604',
+    name: 'プロミスリング',
+    initial: 'フ',
+    price: 2600,
+    line: 'ハ',
+  },
+  {
+    id: '202605',
+    name: 'ロングバケーション',
+    initial: 'ロ',
+    price: 2600,
+    line: 'ラ',
+  },
+  {
+    id: '202602',
+    name: 'ナイトガスパール',
+    initial: 'ナ',
+    price: 2600,
+    line: 'ナ',
+  },
+  {
+    id: '202603',
+    name: 'ブーゲンビリア',
+    initial: 'フ',
+    price: 2600,
+    line: 'ハ',
+  },
+  {
+    id: '202601',
+    name: 'グリンピース',
+    initial: 'ク',
+    price: 2600,
+    line: 'カ',
+  },
+  {
+    id: '202803',
+    name: 'カナディアンクラブ',
+    initial: 'カ',
+    price: 2800,
+    line: 'カ',
+  },
+  {
+    id: '202808',
+    name: 'ノクタンビュール',
+    initial: 'ノ',
+    price: 2800,
+    line: 'ナ',
+  },
+  {
+    id: '202801',
+    name: 'アンプロンプチュ',
+    initial: 'ア',
+    price: 2800,
+    line: 'ア',
+  },
+  {
+    id: '202802',
+    name: 'カクテルグラス',
+    initial: 'カ',
+    price: 2800,
+    line: 'カ',
+  },
+  {
+    id: '202807',
+    name: 'シースルールック',
+    initial: 'シ',
+    price: 2800,
+    line: 'サ',
+  },
+  {
+    id: '202804',
+    name: 'キタアカネ',
+    initial: 'キ',
+    price: 2800,
+    line: 'カ',
+  },
+  {
+    id: '202806',
+    name: 'クリスチャニア',
+    initial: 'ク',
+    price: 2800,
+    line: 'カ',
+  },
+  {
+    id: '202805',
+    name: 'クールオペレーター',
+    initial: 'ク',
+    price: 2800,
+    line: 'カ',
+  },
+  {
+    id: '203008',
+    name: 'ドリームトーク',
+    initial: 'ト',
+    price: 3000,
+    line: 'タ',
+  },
+  {
+    id: '203014',
+    name: 'ロンドンステップ',
+    initial: 'ロ',
+    price: 3000,
+    line: 'ラ',
+  },
+  {
+    id: '203009',
+    name: 'パープルエチュード',
+    initial: 'ハ',
+    price: 3000,
+    line: 'ハ',
+  },
+  {
+    id: '203011',
+    name: 'ブライダルエステ',
+    initial: 'フ',
+    price: 3000,
+    line: 'ハ',
+  },
+  {
+    id: '203005',
+    name: 'シズナイゴゼン',
+    initial: 'シ',
+    price: 3000,
+    line: 'サ',
+  },
+  {
+    id: '203010',
+    name: 'パノニカ',
+    initial: 'ハ',
+    price: 3000,
+    line: 'ハ',
+  },
+  {
+    id: '203006',
+    name: 'ステイウイズミー',
+    initial: 'ス',
+    price: 3000,
+    line: 'サ',
+  },
+  {
+    id: '203012',
+    name: 'ミッションスクール',
+    initial: 'ミ',
+    price: 3000,
+    line: 'マ',
+  },
+  {
+    id: '203001',
+    name: 'アペリティフ',
+    initial: 'ア',
+    price: 3000,
+    line: 'ア',
+  },
+  {
+    id: '203013',
+    name: 'リズムネイション',
+    initial: 'リ',
+    price: 3000,
+    line: 'ラ',
+  },
+  {
+    id: '203007',
+    name: 'タイムトライアル',
+    initial: 'タ',
+    price: 3000,
+    line: 'タ',
+  },
+  {
+    id: '203003',
+    name: 'カルダモン',
+    initial: 'カ',
+    price: 3000,
+    line: 'カ',
+  },
+  {
+    id: '203002',
+    name: 'オールドファッション',
+    initial: 'オ',
+    price: 3000,
+    line: 'ア',
+  },
+  {
+    id: '203004',
+    name: 'キタノスズカゼ',
+    initial: 'キ',
+    price: 3000,
+    line: 'カ',
+  },
+  {
+    id: '203204',
+    name: 'ショートケーキ',
+    initial: 'シ',
+    price: 3200,
+    line: 'サ',
+  },
+  {
+    id: '203208',
+    name: 'ベネチアングラス',
+    initial: 'ヘ',
+    price: 3200,
+    line: 'ハ',
+  },
+  {
+    id: '203201',
+    name: 'アスコットブルー',
+    initial: 'ア',
+    price: 3200,
+    line: 'ア',
+  },
+  {
+    id: '203206',
+    name: 'ピアノソナタ',
+    initial: 'ヒ',
+    price: 3200,
+    line: 'ハ',
+  },
+  {
+    id: '203203',
+    name: 'オールイズラブ',
+    initial: 'オ',
+    price: 3200,
+    line: 'ア',
+  },
+  {
+    id: '203205',
+    name: 'ストーコペイカ',
+    initial: 'ス',
+    price: 3200,
+    line: 'サ',
+  },
+  {
+    id: '203209',
+    name: 'ペイズリー',
+    initial: 'ヘ',
+    price: 3200,
+    line: 'ハ',
+  },
+  {
+    id: '203207',
+    name: 'ブルーコンチェルト',
+    initial: 'フ',
+    price: 3200,
+    line: 'ハ',
+  },
+  {
+    id: '203202',
+    name: 'イメルダシューズ',
+    initial: 'イ',
+    price: 3200,
+    line: 'ア',
+  },
+  {
+    id: '203402',
+    name: 'クラムチャウダー',
+    initial: 'ク',
+    price: 3400,
+    line: 'カ',
+  },
+  {
+    id: '203403',
+    name: 'コーラルレッド',
+    initial: 'コ',
+    price: 3400,
+    line: 'カ',
+  },
+  {
+    id: '203404',
+    name: 'マーキュロ',
+    initial: 'マ',
+    price: 3400,
+    line: 'マ',
+  },
+  {
+    id: '203401',
+    name: 'エルフィン',
+    initial: 'エ',
+    price: 3400,
+    line: 'ア',
+  },
+  {
+    id: '203501',
+    name: 'キスミークイック',
+    initial: 'キ',
+    price: 3500,
+    line: 'カ',
+  },
+  {
+    id: '203502',
+    name: 'ピーチプリンセス',
+    initial: 'ヒ',
+    price: 3500,
+    line: 'ハ',
+  },
+  {
+    id: '203601',
+    name: 'エンゲルスガール',
+    initial: 'エ',
+    price: 3600,
+    line: 'ア',
+  },
+  {
+    id: '203602',
+    name: 'サブリナシューズ',
+    initial: 'サ',
+    price: 3600,
+    line: 'サ',
+  },
+  {
+    id: '203806',
+    name: 'ボンマルシェ',
+    initial: 'ホ',
+    price: 3800,
+    line: 'ハ',
+  },
+  {
+    id: '203801',
+    name: 'イエンタウン',
+    initial: 'イ',
+    price: 3800,
+    line: 'ア',
+  },
+  {
+    id: '203802',
+    name: 'カモフラージュ',
+    initial: 'カ',
+    price: 3800,
+    line: 'カ',
+  },
+  {
+    id: '203805',
+    name: 'ホワイトペッパー',
+    initial: 'ホ',
+    price: 3800,
+    line: 'ハ',
+  },
+  {
+    id: '203807',
+    name: 'レディコング',
+    initial: 'レ',
+    price: 3800,
+    line: 'ラ',
+  },
+  {
+    id: '203804',
+    name: 'パールホワイト',
+    initial: 'ハ',
+    price: 3800,
+    line: 'ハ',
+  },
+  {
+    id: '203803',
+    name: 'ディペンドオンユー',
+    initial: 'テ',
+    price: 3800,
+    line: 'タ',
+  },
+  {
+    id: '204003',
+    name: 'グランホッグデイ',
+    initial: 'ク',
+    price: 4000,
+    line: 'カ',
+  },
+  {
+    id: '204002',
+    name: 'カリフラワー',
+    initial: 'カ',
+    price: 4000,
+    line: 'カ',
+  },
+  {
+    id: '204005',
+    name: 'テクノポップ',
+    initial: 'テ',
+    price: 4000,
+    line: 'タ',
+  },
+  {
+    id: '204006',
+    name: 'プリンセスティアラ',
+    initial: 'フ',
+    price: 4000,
+    line: 'ハ',
+  },
+  {
+    id: '204004',
+    name: 'サワヤカサンサン',
+    initial: 'サ',
+    price: 4000,
+    line: 'サ',
+  },
+  {
+    id: '204007',
+    name: 'マノンレスコ',
+    initial: 'マ',
+    price: 4000,
+    line: 'マ',
+  },
+  {
+    id: '204001',
+    name: 'アンニュイ',
+    initial: 'ア',
+    price: 4000,
+    line: 'ア',
+  },
+  {
+    id: '204202',
+    name: 'ロンシャンドリーム',
+    initial: 'ロ',
+    price: 4200,
+    line: 'ラ',
+  },
+  {
+    id: '204201',
+    name: 'ツガルオトヒメ',
+    initial: 'ツ',
+    price: 4200,
+    line: 'タ',
+  },
+  {
+    id: '204402',
+    name: 'ユアフェミニスト',
+    initial: 'ユ',
+    price: 4400,
+    line: 'ヤ',
+  },
+  {
+    id: '204401',
+    name: 'タッチミー',
+    initial: 'タ',
+    price: 4400,
+    line: 'タ',
+  },
+  {
+    id: '204604',
+    name: 'マイセレナーデ',
+    initial: 'マ',
+    price: 4600,
+    line: 'マ',
+  },
+  {
+    id: '204602',
+    name: 'プロパティ',
+    initial: 'フ',
+    price: 4600,
+    line: 'ハ',
+  },
+  {
+    id: '204601',
+    name: 'デミタスカップ',
+    initial: 'テ',
+    price: 4600,
+    line: 'タ',
+  },
+  {
+    id: '204603',
+    name: 'マーガレットリボン',
+    initial: 'マ',
+    price: 4600,
+    line: 'マ',
+  },
+  {
+    id: '204801',
+    name: 'イワチドリ',
+    initial: 'イ',
+    price: 4800,
+    line: 'ア',
+  },
+  {
+    id: '204803',
+    name: 'バーチャルラッキー',
+    initial: 'ハ',
+    price: 4800,
+    line: 'ハ',
+  },
+  {
+    id: '204802',
+    name: 'シーズデリケート',
+    initial: 'シ',
+    price: 4800,
+    line: 'サ',
+  },
+  {
+    id: '204804',
+    name: 'フジノナデシコ',
+    initial: 'フ',
+    price: 4800,
+    line: 'ハ',
+  },
+  {
+    id: '204805',
+    name: 'ミントジュレップ',
+    initial: 'ミ',
+    price: 4800,
+    line: 'マ',
+  },
+  {
+    id: '205003',
+    name: 'ナッシンウイズワイン',
+    initial: 'ナ',
+    price: 5000,
+    line: 'ナ',
+  },
+  {
+    id: '205004',
+    name: 'ナツコダチ',
+    initial: 'ナ',
+    price: 5000,
+    line: 'ナ',
+  },
+  {
+    id: '205002',
+    name: 'ソングナビゲーター',
+    initial: 'ソ',
+    price: 5000,
+    line: 'サ',
+  },
+  {
+    id: '205005',
+    name: 'フォトスキャナー',
+    initial: 'フ',
+    price: 5000,
+    line: 'ハ',
+  },
+  {
+    id: '205001',
+    name: 'カーソルキー',
+    initial: 'カ',
+    price: 5000,
+    line: 'カ',
+  },
+  {
+    id: '205202',
+    name: 'シラユキ',
+    initial: 'シ',
+    price: 5200,
+    line: 'サ',
+  },
+  {
+    id: '205201',
+    name: 'アイルドゥイット',
+    initial: 'ア',
+    price: 5200,
+    line: 'ア',
+  },
+  {
+    id: '205403',
+    name: 'ボーイミーツガール',
+    initial: 'ホ',
+    price: 5400,
+    line: 'ハ',
+  },
+  {
+    id: '205401',
+    name: 'ゴージャス',
+    initial: 'コ',
+    price: 5400,
+    line: 'カ',
+  },
+  {
+    id: '205402',
+    name: 'ナツノトビラ',
+    initial: 'ナ',
+    price: 5400,
+    line: 'ナ',
+  },
+  {
+    id: '205502',
+    name: 'ピンナップガール',
+    initial: 'ヒ',
+    price: 5500,
+    line: 'ハ',
+  },
+  {
+    id: '205501',
+    name: 'アーユーレディ',
+    initial: 'ア',
+    price: 5500,
+    line: 'ア',
+  },
+  {
+    id: '205602',
+    name: 'ピーチベリーニ',
+    initial: 'ヒ',
+    price: 5600,
+    line: 'ハ',
+  },
+  {
+    id: '205601',
+    name: 'テレフォンコール',
+    initial: 'テ',
+    price: 5600,
+    line: 'タ',
+  },
+  {
+    id: '205801',
+    name: 'ポケットモンブラン',
+    initial: 'ホ',
+    price: 5800,
+    line: 'ハ',
+  },
+  {
+    id: '205802',
+    name: 'リードオルガン',
+    initial: 'リ',
+    price: 5800,
+    line: 'ラ',
+  },
+  {
+    id: '206007',
+    name: 'モンテカルロ',
+    initial: 'モ',
+    price: 6000,
+    line: 'マ',
+  },
+  {
+    id: '206001',
+    name: 'インペリアルミストレス',
+    initial: 'イ',
+    price: 6000,
+    line: 'ア',
+  },
+  {
+    id: '206003',
+    name: 'セオリーオブストリング',
+    initial: 'セ',
+    price: 6000,
+    line: 'サ',
+  },
+  {
+    id: '206005',
+    name: 'マリリンコール',
+    initial: 'マ',
+    price: 6000,
+    line: 'マ',
+  },
+  {
+    id: '206002',
+    name: 'カサンドラクロス',
+    initial: 'カ',
+    price: 6000,
+    line: 'カ',
+  },
+  {
+    id: '206004',
+    name: 'プリンキピア',
+    initial: 'フ',
+    price: 6000,
+    line: 'ハ',
+  },
+  {
+    id: '206006',
+    name: 'ミッシングリンク',
+    initial: 'ミ',
+    price: 6000,
+    line: 'マ',
+  },
+  {
+    id: '206201',
+    name: 'ニセコアンヌプリ',
+    initial: 'ニ',
+    price: 6200,
+    line: 'ナ',
+  },
+  {
+    id: '206202',
+    name: 'マジカルクラップ',
+    initial: 'マ',
+    price: 6200,
+    line: 'マ',
+  },
+  {
+    id: '206401',
+    name: 'ザウアクラウト',
+    initial: 'サ',
+    price: 6400,
+    line: 'サ',
+  },
+  {
+    id: '206404',
+    name: 'ヒカルドリーミン',
+    initial: 'ヒ',
+    price: 6400,
+    line: 'ハ',
+  },
+  {
+    id: '206403',
+    name: 'スペアミントガム',
+    initial: 'ス',
+    price: 6400,
+    line: 'サ',
+  },
+  {
+    id: '206402',
+    name: 'シュガーレスキャンディ',
+    initial: 'シ',
+    price: 6400,
+    line: 'サ',
+  },
+  {
+    id: '206801',
+    name: 'カスガノスミレ',
+    initial: 'カ',
+    price: 6800,
+    line: 'カ',
+  },
+  {
+    id: '207009',
+    name: 'ラッフルラペル',
+    initial: 'ラ',
+    price: 7000,
+    line: 'ラ',
+  },
+  {
+    id: '207006',
+    name: 'セクシーミュージック',
+    initial: 'セ',
+    price: 7000,
+    line: 'サ',
+  },
+  {
+    id: '207002',
+    name: 'エトピリカ',
+    initial: 'エ',
+    price: 7000,
+    line: 'ア',
+  },
+  {
+    id: '207003',
+    name: 'サマーエンプレス',
+    initial: 'サ',
+    price: 7000,
+    line: 'サ',
+  },
+  {
+    id: '207007',
+    name: 'ミヨノハザクラ',
+    initial: 'ミ',
+    price: 7000,
+    line: 'マ',
+  },
+  {
+    id: '207010',
+    name: 'ラブフォーミニ',
+    initial: 'ラ',
+    price: 7000,
+    line: 'ラ',
+  },
+  {
+    id: '207008',
+    name: 'メーポールダンス',
+    initial: 'メ',
+    price: 7000,
+    line: 'マ',
+  },
+  {
+    id: '207001',
+    name: 'アージェントステップ',
+    initial: 'ア',
+    price: 7000,
+    line: 'ア',
+  },
+  {
+    id: '207004',
+    name: 'サロンドボーテ',
+    initial: 'サ',
+    price: 7000,
+    line: 'サ',
+  },
+  {
+    id: '207005',
+    name: 'ジプシークイーン',
+    initial: 'シ',
+    price: 7000,
+    line: 'サ',
+  },
+  {
+    id: '207201',
+    name: 'ミロードビジン',
+    initial: 'ミ',
+    price: 7200,
+    line: 'マ',
+  },
+  {
+    id: '207801',
+    name: 'マタニティドレス',
+    initial: 'マ',
+    price: 7800,
+    line: 'マ',
+  },
+  {
+    id: '208003',
+    name: 'チェックポイント',
+    initial: 'チ',
+    price: 8000,
+    line: 'タ',
+  },
+  {
+    id: '208008',
+    name: 'マルチメディア',
+    initial: 'マ',
+    price: 8000,
+    line: 'マ',
+  },
+  {
+    id: '208002',
+    name: 'スピカ',
+    initial: 'ス',
+    price: 8000,
+    line: 'サ',
+  },
+  {
+    id: '208006',
+    name: 'ナノフラッパー',
+    initial: 'ナ',
+    price: 8000,
+    line: 'ナ',
+  },
+  {
+    id: '208007',
+    name: 'マイハピネス',
+    initial: 'マ',
+    price: 8000,
+    line: 'マ',
+  },
+  {
+    id: '208005',
+    name: 'トリックオアトリート',
+    initial: 'ト',
+    price: 8000,
+    line: 'タ',
+  },
+  {
+    id: '208001',
+    name: 'シーサイドギャラリー',
+    initial: 'シ',
+    price: 8000,
+    line: 'サ',
+  },
+  {
+    id: '208004',
+    name: 'ツジノコミチ',
+    initial: 'ツ',
+    price: 8000,
+    line: 'タ',
+  },
+  {
+    id: '208201',
+    name: 'ワークエリア',
+    initial: 'ワ',
+    price: 8200,
+    line: 'ワ',
+  },
+  {
+    id: '208402',
+    name: 'ボドニアンティーク',
+    initial: 'ホ',
+    price: 8400,
+    line: 'ハ',
+  },
+  {
+    id: '208401',
+    name: 'タビーペルシャ',
+    initial: 'タ',
+    price: 8400,
+    line: 'タ',
+  },
+  {
+    id: '208601',
+    name: 'ヒメノボタン',
+    initial: 'ヒ',
+    price: 8600,
+    line: 'ハ',
+  },
+  {
+    id: '208802',
+    name: 'ドライベルモット',
+    initial: 'ト',
+    price: 8800,
+    line: 'タ',
+  },
+  {
+    id: '208801',
+    name: 'アロマテラピー',
+    initial: 'ア',
+    price: 8800,
+    line: 'ア',
+  },
+  {
+    id: '208803',
+    name: 'パイドパイパー',
+    initial: 'ハ',
+    price: 8800,
+    line: 'ハ',
+  },
+  {
+    id: '209004',
+    name: 'マーケットリサーチ',
+    initial: 'マ',
+    price: 9000,
+    line: 'マ',
+  },
+  {
+    id: '209005',
+    name: 'ミステリーワルツ',
+    initial: 'ミ',
+    price: 9000,
+    line: 'マ',
+  },
+  {
+    id: '209001',
+    name: 'コンスタンタン',
+    initial: 'コ',
+    price: 9000,
+    line: 'カ',
+  },
+  {
+    id: '209003',
+    name: 'プライムタイム',
+    initial: 'フ',
+    price: 9000,
+    line: 'ハ',
+  },
+  {
+    id: '209002',
+    name: 'スーパーシェビニオン',
+    initial: 'ス',
+    price: 9000,
+    line: 'サ',
+  },
+  {
+    id: '209201',
+    name: 'シルクスクリーン',
+    initial: 'シ',
+    price: 9200,
+    line: 'サ',
+  },
+  {
+    id: '209501',
+    name: 'スリッピングスルー',
+    initial: 'ス',
+    price: 9500,
+    line: 'サ',
+  },
+  {
+    id: '209601',
+    name: 'アキタコマチ',
+    initial: 'ア',
+    price: 9600,
+    line: 'ア',
+  },
+  {
+    id: '209602',
+    name: 'エンゼルエコー',
+    initial: 'エ',
+    price: 9600,
+    line: 'ア',
+  },
+  {
+    id: '210001',
+    name: 'フィガロ',
+    initial: 'フ',
+    price: 10000,
+    line: 'ハ',
+  },
+  {
+    id: '210003',
+    name: 'ポップスコンサート',
+    initial: 'ホ',
+    price: 10000,
+    line: 'ハ',
+  },
+  {
+    id: '210002',
+    name: 'プレシャスモーメント',
+    initial: 'フ',
+    price: 10000,
+    line: 'ハ',
+  },
+  {
+    id: '210005',
+    name: 'ラストチャンス',
+    initial: 'ラ',
+    price: 10000,
+    line: 'ラ',
+  },
+  {
+    id: '210004',
+    name: 'ミルラインレート',
+    initial: 'ミ',
+    price: 10000,
+    line: 'マ',
+  },
+  {
+    id: '210101',
+    name: 'ミルキーキャット',
+    initial: 'ミ',
+    price: 10100,
+    line: 'マ',
+  },
+  {
+    id: '210202',
+    name: 'レーチェル',
+    initial: 'レ',
+    price: 10200,
+    line: 'ラ',
+  },
+  {
+    id: '210201',
+    name: 'ブランチキャリーセット',
+    initial: 'フ',
+    price: 10200,
+    line: 'ハ',
+  },
+  {
+    id: '210301',
+    name: 'エヴァミルク',
+    initial: 'エ',
+    price: 10300,
+    line: 'ア',
+  },
+  {
+    id: '210403',
+    name: 'スカイダイヴィング',
+    initial: 'ス',
+    price: 10400,
+    line: 'サ',
+  },
+  {
+    id: '210402',
+    name: 'コラレクタ',
+    initial: 'コ',
+    price: 10400,
+    line: 'カ',
+  },
+  {
+    id: '210408',
+    name: 'リベルトコディー',
+    initial: 'リ',
+    price: 10400,
+    line: 'ラ',
+  },
+  {
+    id: '210407',
+    name: 'メープルシロップ',
+    initial: 'メ',
+    price: 10400,
+    line: 'マ',
+  },
+  {
+    id: '210404',
+    name: 'ドミノスキャンダル',
+    initial: 'ト',
+    price: 10400,
+    line: 'タ',
+  },
+  {
+    id: '210401',
+    name: 'コールミークイーン',
+    initial: 'コ',
+    price: 10400,
+    line: 'カ',
+  },
+  {
+    id: '210406',
+    name: 'マックスファクター',
+    initial: 'マ',
+    price: 10400,
+    line: 'マ',
+  },
+  {
+    id: '210405',
+    name: 'ブランドタイアップ',
+    initial: 'フ',
+    price: 10400,
+    line: 'ハ',
+  },
+  {
+    id: '210601',
+    name: 'アクロッシュクール',
+    initial: 'ア',
+    price: 10600,
+    line: 'ア',
+  },
+  {
+    id: '210802',
+    name: 'クロスワードパズル',
+    initial: 'ク',
+    price: 10800,
+    line: 'カ',
+  },
+  {
+    id: '210801',
+    name: 'オレンジスクイーズ',
+    initial: 'オ',
+    price: 10800,
+    line: 'ア',
+  },
+  {
+    id: '211002',
+    name: 'チャームクォーク',
+    initial: 'チ',
+    price: 11000,
+    line: 'タ',
+  },
+  {
+    id: '211003',
+    name: 'モエシャンドン',
+    initial: 'モ',
+    price: 11000,
+    line: 'マ',
+  },
+  {
+    id: '211001',
+    name: 'カッティングチーズ',
+    initial: 'カ',
+    price: 11000,
+    line: 'カ',
+  },
+  {
+    id: '211202',
+    name: 'ネオンサイン',
+    initial: 'ネ',
+    price: 11200,
+    line: 'ナ',
+  },
+  {
+    id: '211201',
+    name: 'スピーチバルーン',
+    initial: 'ス',
+    price: 11200,
+    line: 'サ',
+  },
+  {
+    id: '211203',
+    name: 'ミアモーレ',
+    initial: 'ミ',
+    price: 11200,
+    line: 'マ',
+  },
+  {
+    id: '211401',
+    name: 'ミレニアムクイーン',
+    initial: 'ミ',
+    price: 11400,
+    line: 'マ',
+  },
+  {
+    id: '211601',
+    name: 'エミーナミーナ',
+    initial: 'エ',
+    price: 11600,
+    line: 'ア',
+  },
+  {
+    id: '211605',
+    name: 'メルティングポイント',
+    initial: 'メ',
+    price: 11600,
+    line: 'マ',
+  },
+  {
+    id: '211602',
+    name: 'ネグリジェンス',
+    initial: 'ネ',
+    price: 11600,
+    line: 'ナ',
+  },
+  {
+    id: '211603',
+    name: 'フラッシュオブライト',
+    initial: 'フ',
+    price: 11600,
+    line: 'ハ',
+  },
+  {
+    id: '211604',
+    name: 'マレセレニタティス',
+    initial: 'マ',
+    price: 11600,
+    line: 'マ',
+  },
+  {
+    id: '212001',
+    name: 'カラオケクイーン',
+    initial: 'カ',
+    price: 12000,
+    line: 'カ',
+  },
+  {
+    id: '212002',
+    name: 'クロワッサン',
+    initial: 'ク',
+    price: 12000,
+    line: 'カ',
+  },
+  {
+    id: '212003',
+    name: 'ロマンセ',
+    initial: 'ロ',
+    price: 12000,
+    line: 'ラ',
+  },
+  {
+    id: '212801',
+    name: 'エバレットチャーチ',
+    initial: 'エ',
+    price: 12800,
+    line: 'ア',
+  },
+  {
+    id: '213001',
+    name: 'スライトディジー',
+    initial: 'ス',
+    price: 13000,
+    line: 'サ',
+  },
+  {
+    id: '213003',
+    name: 'ミッドナイトアールティ',
+    initial: 'ミ',
+    price: 13000,
+    line: 'マ',
+  },
+  {
+    id: '213002',
+    name: 'セプテンバーレイン',
+    initial: 'セ',
+    price: 13000,
+    line: 'サ',
+  },
+  {
+    id: '213201',
+    name: 'トップシークレット',
+    initial: 'ト',
+    price: 13200,
+    line: 'タ',
+  },
+  {
+    id: '213603',
+    name: 'ミズタマ',
+    initial: 'ミ',
+    price: 13600,
+    line: 'マ',
+  },
+  {
+    id: '213602',
+    name: 'ハーベストブラウン',
+    initial: 'ハ',
+    price: 13600,
+    line: 'ハ',
+  },
+  {
+    id: '213601',
+    name: 'スノーモービル',
+    initial: 'ス',
+    price: 13600,
+    line: 'サ',
+  },
+  {
+    id: '214001',
+    name: 'キュービックムーン',
+    initial: 'キ',
+    price: 14000,
+    line: 'カ',
+  },
+  {
+    id: '214004',
+    name: 'レザートップ',
+    initial: 'レ',
+    price: 14000,
+    line: 'ラ',
+  },
+  {
+    id: '214002',
+    name: 'フレンチマスタード',
+    initial: 'フ',
+    price: 14000,
+    line: 'ハ',
+  },
+  {
+    id: '214003',
+    name: 'メディタレーニアン',
+    initial: 'メ',
+    price: 14000,
+    line: 'マ',
+  },
+  {
+    id: '214201',
+    name: 'サブリミナルムービー',
+    initial: 'サ',
+    price: 14200,
+    line: 'サ',
+  },
+  {
+    id: '214401',
+    name: 'ファーストレディ',
+    initial: 'フ',
+    price: 14400,
+    line: 'ハ',
+  },
+  {
+    id: '214801',
+    name: 'ドッペルドミナント',
+    initial: 'ト',
+    price: 14800,
+    line: 'タ',
+  },
+  {
+    id: '215001',
+    name: 'マイルドマインド',
+    initial: 'マ',
+    price: 15000,
+    line: 'マ',
+  },
+  {
+    id: '215201',
+    name: 'ロイヤルシュプール',
+    initial: 'ロ',
+    price: 15200,
+    line: 'ラ',
+  },
+  {
+    id: '215601',
+    name: 'ピュアモルト',
+    initial: 'ヒ',
+    price: 15600,
+    line: 'ハ',
+  },
+  {
+    id: '216001',
+    name: 'プラチナロゼカラー',
+    initial: 'フ',
+    price: 16000,
+    line: 'ハ',
+  },
+  {
+    id: '216002',
+    name: 'ホワイトノリピー',
+    initial: 'ホ',
+    price: 16000,
+    line: 'ハ',
+  },
+  {
+    id: '217002',
+    name: 'プライベートレッスン',
+    initial: 'フ',
+    price: 17000,
+    line: 'ハ',
+  },
+  {
+    id: '217001',
+    name: 'プチカプリース',
+    initial: 'フ',
+    price: 17000,
+    line: 'ハ',
+  },
+  {
+    id: '217601',
+    name: 'エピュキュリアン',
+    initial: 'エ',
+    price: 17600,
+    line: 'ア',
+  },
+  {
+    id: '219001',
+    name: 'インソムニア',
+    initial: 'イ',
+    price: 19000,
+    line: 'ア',
+  },
+  {
+    id: '220002',
+    name: 'ユアウェルカム',
+    initial: 'ユ',
+    price: 20000,
+    line: 'ヤ',
+  },
+  {
+    id: '220001',
+    name: 'トップモデル',
+    initial: 'ト',
+    price: 20000,
+    line: 'タ',
+  },
+  {
+    id: '220201',
+    name: 'アイリッシュブルー',
+    initial: 'ア',
+    price: 20200,
+    line: 'ア',
+  },
+  {
+    id: '220202',
+    name: 'ラストペディグリー',
+    initial: 'ラ',
+    price: 20200,
+    line: 'ラ',
+  },
+  {
+    id: '220501',
+    name: 'コーイヌール',
+    initial: 'コ',
+    price: 20500,
+    line: 'カ',
+  },
+  {
+    id: '220502',
+    name: 'スローバラード',
+    initial: 'ス',
+    price: 20500,
+    line: 'サ',
+  },
+  {
+    id: '221002',
+    name: 'パリティビット',
+    initial: 'ハ',
+    price: 21000,
+    line: 'ハ',
+  },
+  {
+    id: '221001',
+    name: 'サヨナラ',
+    initial: 'サ',
+    price: 21000,
+    line: 'サ',
+  },
+];
+
+if (typeof window !== 'undefined') {
+  window.MARE_DATA = MARE_DATA;
+}
+
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const growthBaseMap = {
+    '超早熟': 70,
+    '早熟': 60,
+    '普通': 50,
+    '遅普通': 40,
+    '晩成': 30,
+    '超晩成': 20,
+  };
+
+  const spTable = [
+    ['勝負根性', 'スピード', 'スタミナ', '落ち着き', '気性難', '親似', '成長型', '健康'],
+    ['スピード', '勝負根性', '落ち着き', 'スタミナ', '親似', '気性難', '健康', '成長型'],
+    ['スタミナ', '落ち着き', '勝負根性', 'スピード', '成長型', '健康', '気性難', '親似'],
+    ['落ち着き', 'スタミナ', 'スピード', '勝負根性', '健康', '成長型', '親似', '気性難'],
+    ['気性難', '親似', '成長型', '健康', '勝負根性', 'スピード', 'スタミナ', '落ち着き'],
+    ['親似', '気性難', '健康', '成長型', 'スピード', '勝負根性', '落ち着き', 'スタミナ'],
+    ['成長型', '健康', '気性難', '親似', 'スタミナ', '落ち着き', '勝負根性', 'スピード'],
+    ['健康', '成長型', '親似', '気性難', '落ち着き', 'スタミナ', 'スピード', '勝負根性'],
+  ];
+
+  const ROW_TO_KANA_LIST = {
+    'ア': ['ア', 'イ', 'ウ', 'エ', 'オ'],
+    'カ': ['カ', 'キ', 'ク', 'ケ', 'コ'],
+    'サ': ['サ', 'シ', 'ス', 'セ', 'ソ'],
+    'タ': ['タ', 'チ', 'ツ', 'テ', 'ト'],
+    'ナ': ['ナ', 'ニ', 'ヌ', 'ネ', 'ノ'],
+    'ハ': ['ハ', 'ヒ', 'フ', 'ヘ', 'ホ'],
+    'マ': ['マ', 'ミ', 'ム', 'メ', 'モ'],
+    'ヤ': ['ヤ', 'ユ', 'ヨ'],
+    'ラ': ['ラ', 'リ', 'ル', 'レ', 'ロ'],
+    'ワ': ['ワ', 'ヰ', 'ヱ', 'ヲ', 'ン'],
+  };
+
+  const KANA_TO_INITIAL = {
+    'ア': 'ア', 'イ': 'イ', 'ウ': 'ウ', 'エ': 'エ', 'オ': 'オ',
+    'カ': 'カ', 'キ': 'キ', 'ク': 'ク', 'ケ': 'ケ', 'コ': 'コ',
+    'サ': 'サ', 'シ': 'シ', 'ス': 'ス', 'セ': 'セ', 'ソ': 'ソ',
+    'タ': 'タ', 'チ': 'チ', 'ツ': 'ツ', 'テ': 'テ', 'ト': 'ト',
+    'ナ': 'ナ', 'ニ': 'ニ', 'ヌ': 'ヌ', 'ネ': 'ネ', 'ノ': 'ノ',
+    'ハ': 'ハ', 'ヒ': 'ヒ', 'フ': 'フ', 'ヘ': 'ヘ', 'ホ': 'ホ',
+    'マ': 'マ', 'ミ': 'ミ', 'ム': 'ム', 'メ': 'メ', 'モ': 'モ',
+    'ヤ': 'ヤ', 'ユ': 'ユ', 'ヨ': 'ヨ',
+    'ラ': 'ラ', 'リ': 'リ', 'ル': 'ル', 'レ': 'レ', 'ロ': 'ロ',
+    'ワ': 'ワ', 'ヰ': 'ヰ', 'ヱ': 'ヱ', 'ヲ': 'ヲ', 'ン': 'ン',
+  };
+
+  const INITIAL_TO_LINE = Object.entries(ROW_TO_KANA_LIST).reduce((acc, [line, kanaList]) => {
+    kanaList.forEach((kana) => {
+      const initial = KANA_TO_INITIAL[kana];
+      if (initial) {
+        acc[initial] = line;
+      }
+    });
+    return acc;
+  }, {});
+
+  const state = {
+    stallionRows: [],
+    mareRows: [],
+    spAssignments: Array(8).fill(''),
+    spSelections: Array(8).fill(false),
+    spRemainder: null,
+    spHealthStates: Array(8).fill(null),
+    savedList: [],
+    mareHistory: [],
+    lastResult: null,
+    hasExplicitOk: false,
+  };
+
+  const els = {
+    priceFoal: document.getElementById('price-foal'),
+    priceStallion: document.getElementById('price-stallion'),
+    priceMare: document.getElementById('price-mare'),
+    stallionInitial: document.getElementById('stallion-initial'),
+    stallionConsonant: document.getElementById('stallion-consonant'),
+    stallionName: document.getElementById('stallion-name'),
+    mareInitial: document.getElementById('mare-initial'),
+    mareConsonant: document.getElementById('mare-consonant'),
+    mareName: document.getElementById('mare-name'),
+    bestWeight: document.getElementById('best-weight'),
+    growthType: document.getElementById('growth-type'),
+    okMonth: document.getElementById('ok-month'),
+    okWeek: document.getElementById('ok-week'),
+    okReset: document.getElementById('ok-reset'),
+    spCells: Array.from(document.querySelectorAll('table.sp-grid input[type="text"]')),
+    spResetButton: document.getElementById('sp-reset'),
+    resetAllButton: document.getElementById('reset-all'),
+    kspFields: Array.from(document.querySelectorAll('.ksp-field')),
+    savedSlots: Array.from(document.querySelectorAll('.saved-slot')),
+    historyRows: Array.from(document.querySelectorAll('.history-row')),
+  };
+
+  attachInitialOption(els.stallionInitial);
+  attachInitialOption(els.mareInitial);
+
+  els.bestWeight.value = 450;
+  if (els.okMonth) els.okMonth.value = els.okMonth.value || '4';
+  if (els.okWeek) els.okWeek.value = els.okWeek.value || '1';
+  setupBestWeightButtons();
+
+  const kspButton = Array.from(document.querySelectorAll('.btn.btn-primary'))
+    .find((btn) => btn.textContent.includes('KSP計算実行'));
+  const addListButton = Array.from(document.querySelectorAll('.btn.btn-secondary'))
+    .find((btn) => btn.textContent.includes('データをリストに追加'));
+  const removeListButton = Array.from(document.querySelectorAll('.btn.btn-secondary'))
+    .find((btn) => btn.textContent.includes('選択リスト除去'));
+  els.spResetButton?.addEventListener('click', resetSpGrid);
+  els.resetAllButton?.addEventListener('click', resetAllInputs);
+
+  const messageSpan = createMessageSpan(kspButton);
+
+  els.okMonth?.addEventListener('change', () => {
+    state.hasExplicitOk = true;
+  });
+  els.okWeek?.addEventListener('change', () => {
+    state.hasExplicitOk = true;
+  });
+  els.okReset?.addEventListener('click', () => {
+    if (els.okMonth) els.okMonth.value = 4;
+    if (els.okWeek) els.okWeek.value = 1;
+    state.hasExplicitOk = false;
+  });
+
+  loadCsvData();
+  bindDropdowns();
+  bindSpGrid();
+  bindHistoryButtons();
+
+  kspButton?.addEventListener('click', () => {
+    const validation = validateInputs();
+    if (!validation.valid) {
+      messageSpan.textContent = validation.message;
+      resetKspFields();
+      return;
+    }
+    messageSpan.textContent = '';
+    const result = runKspCalculation();
+    state.lastResult = result;
+    updateKspDisplay(result, messageSpan);
+    updateMareHistory();
+  });
+
+  addListButton?.addEventListener('click', () => {
+    if (!state.lastResult) return;
+    addToSavedList();
+  });
+
+  removeListButton?.addEventListener('click', () => {
+    const select = document.getElementById('list-remove-index');
+    const index = Number(select?.value || '1') - 1;
+    removeSavedSlot(index);
+  });
+
+  function attachInitialOption(selectEl) {
+    if (!selectEl) return;
+    const hasDash = Array.from(selectEl.options).some((opt) => opt.value === '-');
+    if (!hasDash) {
+      const opt = document.createElement('option');
+      opt.value = '-';
+      opt.textContent = '-';
+      selectEl.insertBefore(opt, selectEl.firstChild);
+    }
+    selectEl.value = '-';
+  }
+
+  function setupBestWeightButtons() {
+    const row = document.getElementById('best-weight')?.parentElement;
+    if (!row) return;
+    const buttons = Array.from(row.querySelectorAll('button.btn.btn-secondary'));
+    const increments = [10, -10, 50, -50];
+    buttons.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const inc = increments[idx] || 0;
+        const current = Number(els.bestWeight.value) || 0;
+        els.bestWeight.value = current + inc;
+      });
+    });
+  }
+
+  function createMessageSpan(anchorButton) {
+    const span = document.createElement('span');
+    span.id = 'ksp-message';
+    span.style.marginLeft = '8px';
+    span.style.fontSize = '12px';
+    if (anchorButton && anchorButton.parentElement) {
+      anchorButton.insertAdjacentElement('afterend', span);
+    } else {
+      document.body.appendChild(span);
+    }
+    return span;
+  }
+
+  function loadCsvData() {
+    // CSV読み込みを廃止し、埋め込み済みの DB 配列を利用
+    if (Array.isArray(window.STALLION_DATA)) {
+      state.stallionRows = window.STALLION_DATA.map((row) => ({
+        ...row,
+        line: row.line || deriveLineFromInitial(row.initial),
+      }));
+    } else {
+      state.stallionRows = [];
+    }
+
+    if (Array.isArray(window.MARE_DATA)) {
+      state.mareRows = window.MARE_DATA.map((row) => ({
+        ...row,
+        line: row.line || deriveLineFromInitial(row.initial),
+      }));
+    } else {
+      state.mareRows = [];
+    }
+
+    refreshStallionDropdowns();
+    refreshMareDropdowns();
+  }
+
+  function deriveLineFromInitial(initial) {
+    if (!initial) return '-';
+    return INITIAL_TO_LINE[initial] || '-';
+  }
+
+  function bindDropdowns() {
+    els.stallionInitial?.addEventListener('change', () => {
+      refreshStallionDropdowns();
+    });
+    els.stallionConsonant?.addEventListener('change', () => {
+      populateHorseNames(els.stallionName, state.stallionRows, els.stallionInitial.value, els.stallionConsonant.value);
+    });
+    els.stallionName?.addEventListener('change', () => {
+      setPriceFromSelection(els.stallionName, state.stallionRows, els.priceStallion);
+    });
+
+    els.mareInitial?.addEventListener('change', () => {
+      refreshMareDropdowns();
+    });
+    els.mareConsonant?.addEventListener('change', () => {
+      populateHorseNames(els.mareName, state.mareRows, els.mareInitial.value, els.mareConsonant.value);
+    });
+    els.mareName?.addEventListener('change', () => {
+      setPriceFromSelection(els.mareName, state.mareRows, els.priceMare);
+    });
+  }
+
+  function refreshStallionDropdowns() {
+    populateConsonants(els.stallionConsonant, state.stallionRows, els.stallionInitial.value);
+    populateHorseNames(els.stallionName, state.stallionRows, els.stallionInitial.value, els.stallionConsonant.value);
+  }
+
+  function refreshMareDropdowns() {
+    populateConsonants(els.mareConsonant, state.mareRows, els.mareInitial.value);
+    populateHorseNames(els.mareName, state.mareRows, els.mareInitial.value, els.mareConsonant.value);
+  }
+
+  function populateConsonants(selectEl, rows, lineValue) {
+    if (!selectEl) return;
+    const kanas = lineValue && lineValue !== '-' ? (ROW_TO_KANA_LIST[lineValue] || []) : [];
+    selectEl.innerHTML = '';
+    const dash = document.createElement('option');
+    dash.value = '-';
+    dash.textContent = '-';
+    selectEl.appendChild(dash);
+    kanas.forEach((kana) => {
+      const opt = document.createElement('option');
+      opt.value = kana;
+      opt.textContent = kana;
+      selectEl.appendChild(opt);
+    });
+    selectEl.value = '-';
+  }
+
+  function populateHorseNames(selectEl, rows, lineValue, consonantValue) {
+    if (!selectEl) return;
+    const noData = !rows || rows.length === 0;
+    const filtered = filterByInitial(rows, lineValue).filter((r) => {
+      if (!consonantValue || consonantValue === '-') return true;
+      const initial = KANA_TO_INITIAL[consonantValue];
+      if (!initial) return false;
+      return r.initial === initial;
+    });
+    selectEl.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '選択してください';
+    selectEl.appendChild(placeholder);
+    if (filtered.length === 0) {
+      const opt = document.createElement('option');
+      opt.textContent = noData ? 'データ未読込（手入力可）' : '該当なし';
+      opt.value = '';
+      selectEl.appendChild(opt);
+      return;
+    }
+    filtered.forEach((r) => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      selectEl.appendChild(opt);
+    });
+    selectEl.value = '';
+  }
+
+  function filterByInitial(rows, lineValue) {
+    if (!rows) return [];
+    if (!lineValue || lineValue === '-') return rows;
+    return rows.filter((r) => (r.line || '-') === lineValue);
+  }
+
+  function setPriceFromSelection(selectEl, rows, priceInput) {
+    if (!selectEl || !priceInput) return;
+    const id = selectEl.value;
+    if (!id) return;
+    const row = rows.find((r) => r.id === id);
+    if (row) {
+      priceInput.value = row.price;
+    }
+  }
+
+  function bindSpGrid() {
+    els.spCells.forEach((cell, idx) => {
+      cell.value = '';
+      cell.addEventListener('click', () => handleSpCellClick(idx));
+    });
+  }
+
+  function resetSpGrid() {
+    state.spAssignments = Array(8).fill('');
+    state.spSelections = Array(8).fill(false);
+    state.spRemainder = null;
+    state.spHealthStates = Array(8).fill(null);
+    updateSpGridDisplay();
+  }
+
+  function handleSpCellClick(index) {
+    if (state.spRemainder === null) {
+      const rowIdx = index < 4 ? index : 4 + (index - 4);
+      const row = spTable[rowIdx];
+      const remainder = row.indexOf('スピード');
+      if (remainder === -1) return;
+      state.spRemainder = remainder;
+      state.spAssignments = spTable.map((r) => r[remainder]);
+      state.spSelections = Array(8).fill(false);
+      state.spHealthStates = Array(8).fill(null);
+      updateSpGridDisplay();
+      return;
+    }
+    if (!state.spAssignments[index]) return;
+    if (state.spAssignments[index] === '健康') {
+      const current = state.spHealthStates[index];
+      if (current === null) {
+        state.spHealthStates[index] = '丈夫';
+        state.spSelections[index] = true;
+      } else if (current === '丈夫') {
+        state.spHealthStates[index] = '虚弱';
+        state.spSelections[index] = true;
+      } else {
+        state.spHealthStates[index] = null;
+        state.spSelections[index] = false;
+      }
+    } else {
+      state.spSelections[index] = !state.spSelections[index];
+    }
+    updateSpGridDisplay();
+  }
+
+  function updateSpGridDisplay() {
+    els.spCells.forEach((cell, idx) => {
+      const baseName = state.spAssignments[idx];
+      let displayName = baseName;
+      if (baseName === '健康' && state.spHealthStates[idx]) {
+        displayName = state.spHealthStates[idx];
+      }
+      cell.value = displayName || '';
+      if (state.spSelections[idx]) {
+        cell.style.backgroundColor = '#fff6c2';
+      } else {
+        cell.style.backgroundColor = '#ffffff';
+      }
+    });
+  }
+
+  function validateInputs() {
+    const missing = [];
+    const foalPriceInput = getNumberValue(els.priceFoal);
+    if (foalPriceInput == null || foalPriceInput <= 0) missing.push('仔馬価格');
+    const stallionPriceInput = getNumberValue(els.priceStallion);
+    if (stallionPriceInput == null) missing.push('種馬価格'); // 0 は有効
+    const marePriceInput = getNumberValue(els.priceMare);
+    if (marePriceInput == null || marePriceInput <= 0) missing.push('母馬価格');
+    if (!getSelectedSex()) missing.push('性別');
+    if (!getNumberValue(els.bestWeight)) missing.push('ベスト体重');
+    if (!els.growthType?.value) missing.push('成長型');
+
+    if (missing.length >= 2) {
+      return { valid: false, message: '必要データの入力が抜けています' };
+    }
+    if (missing.length === 1) {
+      return { valid: false, message: `${missing[0]}の入力が抜けています` };
+    }
+    return { valid: true, message: '' };
+  }
+
+  function getSelectedSex() {
+    const checked = document.querySelector('input[name="sex"]:checked');
+    return checked ? checked.value : null;
+  }
+
+  function getNumberValue(input) {
+    if (!input) return null;
+    const v = Number(input.value);
+    if (Number.isNaN(v)) return null;
+    return input.value === '' ? null : v;
+  }
+
+  function resetKspFields() {
+    els.kspFields.forEach((f, idx) => {
+      f.textContent = `候補${idx + 1}：──`;
+    });
+  }
+
+  function runKspCalculation() {
+    const priceInputs = readPriceInputs();
+    const { foalPriceMan, stallionPriceMan, marePriceMan } = priceInputs;
+    const bestWeight = getNumberValue(els.bestWeight);
+    const growthType = els.growthType?.value;
+    const sex = getSelectedSex();
+    const okMonth = getNumberValue(els.okMonth);
+    const okWeek = getNumberValue(els.okWeek);
+
+    const A = Math.floor(((bestWeight || 0) - 256) / 2);
+    const base = growthBaseMap[growthType] ?? 50;
+    const needsOkBase = ['遅普通', '晩成', '超晩成'].includes(growthType || '');
+    const isDefaultOkWeek = okMonth === 4 && okWeek === 1;
+    const useGrowthWindow = needsOkBase && state.hasExplicitOk && okMonth && okWeek && !isDefaultOkWeek;
+
+    const popularityCandidates = collectPopularityCandidates(foalPriceMan, A, stallionPriceMan, marePriceMan, sex);
+    const shokiCandidates = collectShokiCandidates(popularityCandidates, stallionPriceMan, marePriceMan, sex);
+    const genkaiCandidates = collectGenkaiCandidates({
+      shokiCandidates,
+      popularityCandidates,
+      base,
+      stallionPriceMan,
+      marePriceMan,
+      sex,
+      spRemainder: state.spRemainder,
+      needsOk: useGrowthWindow,
+      okMonth,
+      okWeek,
+    });
+
+    const kspCandidates = genkaiCandidates
+      .map((g) => g - 35)
+      .filter((k) => k >= -34 && k <= 98)
+      .sort((a, b) => b - a);
+    const precise = state.spRemainder !== null;
+
+    return {
+      kspCandidates,
+      precise,
+      needsOk: useGrowthWindow,
+      okMonth,
+      okWeek,
+      spRemainder: state.spRemainder,
+    };
+  }
+
+  function readPriceInputs() {
+    // 仔馬・種牡馬・母馬価格はUI表示どおり「万円」で受け取る
+    const foalPriceMan = getNumberValue(els.priceFoal);
+    const stallionPriceMan = getNumberValue(els.priceStallion);
+    const marePriceMan = getNumberValue(els.priceMare);
+
+    return {
+      foalPriceMan,
+      stallionPriceMan,
+      marePriceMan,
+    };
+  }
+
+  function collectPopularityCandidates(targetFoalPriceMan, A) {
+    const results = new Set();
+    if (targetFoalPriceMan == null) return results;
+    const maxN = 180;
+    for (let N = 0; N <= maxN; N += 1) {
+      // 売却価格（万円） = floor(A * (N - 16) / 220) * 100
+      let saleMan = Math.floor(A * (N - 16) / 220) * 100;
+      if (saleMan <= 0) {
+        saleMan = 100; // 0円以下は100万円に補正
+      }
+      if (saleMan === targetFoalPriceMan) {
+        results.add(N);
+      }
+    }
+    return results;
+  }
+
+  function popularityFromSNow(sNow, stallionPriceMan, marePriceMan, sex) {
+    const C = (marePriceMan || 0) / 100;
+    const D = Math.floor((stallionPriceMan || 0) / 20);
+    const E = Math.floor((C + D) / 4);
+    const F = sex === '牡' ? 20 : 16;
+    const G = sNow + E + F;
+    const H = Math.floor(G / 2);
+    if (H <= 80) return H;
+    return Math.floor(H / 2) + 40;
+  }
+
+  function collectShokiCandidates(popularityCandidates, stallionPriceMan, marePriceMan, sex) {
+    const shoki = new Set();
+    for (let s = 0; s <= 130; s += 1) {
+      const n = popularityFromSNow(s, stallionPriceMan, marePriceMan, sex);
+      if (popularityCandidates.has(n)) {
+        shoki.add(s);
+      }
+    }
+    return shoki;
+  }
+
+  function collectGenkaiCandidates(options) {
+    const {
+      shokiCandidates,
+      popularityCandidates,
+      base,
+      stallionPriceMan,
+      marePriceMan,
+      sex,
+      spRemainder,
+      needsOk,
+      okMonth,
+      okWeek,
+    } = options;
+    const genkaiSet = new Set();
+    for (let g = 1; g <= 133; g += 1) {
+      for (let a = base; a <= base + 9; a += 1) {
+        const shoki = Math.floor(g * a / 100);
+        if (!shokiCandidates.has(shoki)) continue;
+        const n = popularityFromSNow(shoki, stallionPriceMan, marePriceMan, sex);
+        if (!popularityCandidates.has(n)) continue;
+        if (spRemainder !== null && g % 8 !== spRemainder) continue;
+        if (needsOk && okMonth && okWeek) {
+          if (!passesGrowthWindow(shoki, g, okMonth, okWeek)) continue;
+        }
+        genkaiSet.add(g);
+      }
+    }
+    return Array.from(genkaiSet).sort((a, b) => a - b);
+  }
+
+  function passesGrowthWindow(shoki, genkai, okMonth, okWeek) {
+    const weeks = calcWeeksFromApril2(okMonth, okWeek);
+    let current = shoki;
+    const target = Math.floor(genkai / 2);
+    if (weeks === 0) {
+      return current === target;
+    }
+    let prev = current;
+    for (let i = 0; i < weeks; i += 1) {
+      prev = current;
+      if (current < target) {
+        current += 1;
+      }
+    }
+    return current === target && prev < target;
+  }
+
+  function calcWeeksFromApril2(month, week) {
+    const startMonth = 4;
+    const startWeek = 2;
+    const monthDiff = (month || startMonth) - startMonth;
+    const weekDiff = (week || startWeek) - startWeek;
+    return Math.max(0, monthDiff * 4 + weekDiff);
+  }
+
+  function updateKspDisplay(result, messageSpanNode) {
+    resetKspFields();
+    if (!result.kspCandidates.length) {
+      messageSpanNode.textContent = '条件に合致する候補がありません';
+      return;
+    }
+
+    if (!result.precise) {
+      const min = Math.min(...result.kspCandidates);
+      const max = Math.max(...result.kspCandidates);
+      messageSpanNode.textContent = `KSP範囲： ${min}〜${max}`;
+      return;
+    }
+
+    messageSpanNode.textContent = '';
+    result.kspCandidates.slice(0, 6).forEach((ksp, idx) => {
+      els.kspFields[idx].textContent = `候補${idx + 1}：KSP=${ksp}`;
+    });
+  }
+
+  function addToSavedList() {
+    const { kspCandidates, precise } = state.lastResult;
+    const growth = els.growthType?.value || '─';
+    if (!kspCandidates.length) return;
+
+    let kspText = '─';
+    if (precise) {
+      const candidates = kspCandidates.slice(0, 6).map((value) => `${value}`);
+      kspText = candidates.join('／');
+    } else {
+      kspText = `${Math.min(...kspCandidates)}〜${Math.max(...kspCandidates)}`;
+    }
+
+    let line1 = summarizeAbilities(['スタミナ', '勝負根性', '落ち着き']);
+    let line2 = summarizeAbilities(['気性難', '健康', '丈夫', '虚弱', '親似']);
+
+    const hasSoshitsu = document.querySelector('input[name="comment-2yo-soshitsu"]')?.checked;
+    const hasKashikoi = document.querySelector('input[name="comment-2yo-kashikoi"]')?.checked;
+    if (hasSoshitsu) {
+      line1 = line1 === '─' ? '素質' : `${line1}／素質`;
+    }
+    if (hasKashikoi) {
+      line2 = line2 === '─' ? '賢い' : `${line2}／賢い`;
+    }
+
+    const newEntry = { kspText, growth, line1, line2 };
+    state.savedList.unshift(newEntry);
+    state.savedList = state.savedList.slice(0, 3);
+    renderSavedList();
+  }
+
+  function summarizeAbilities(targetNames) {
+    const picked = [];
+    state.spAssignments.forEach((name, idx) => {
+      if (!state.spSelections[idx]) return;
+      let effectiveName = name;
+      if (name === '健康') {
+        const h = state.spHealthStates[idx];
+        if (!h) return;
+        effectiveName = h;
+      }
+      if (targetNames.includes(effectiveName) && !picked.includes(effectiveName)) {
+        picked.push(effectiveName);
+      }
+    });
+    if (!picked.length) return '─';
+    return picked.join('／');
+  }
+
+  function renderSavedList() {
+    els.savedSlots.forEach((slot, idx) => {
+      const entry = state.savedList[idx];
+      const header = slot.querySelector('.saved-slot-header');
+      const lines = slot.querySelectorAll('.saved-slot-line');
+      if (!entry) {
+        if (header) header.textContent = `リスト${idx + 1}：KSP ──／──`;
+        if (lines[0]) lines[0].textContent = '能力コメント（ST・根性 など）';
+        if (lines[1]) lines[1].textContent = '気性／落着／丈夫／虚弱 など';
+      } else {
+        if (header) header.textContent = `リスト${idx + 1}：KSP ${entry.kspText}／${entry.growth}`;
+        if (lines[0]) lines[0].textContent = entry.line1;
+        if (lines[1]) lines[1].textContent = entry.line2;
+      }
+    });
+  }
+
+  function removeSavedSlot(index) {
+    if (index < 0 || index >= state.savedList.length) return;
+    state.savedList.splice(index, 1);
+    renderSavedList();
+  }
+
+  function updateMareHistory() {
+    const price = getNumberValue(els.priceMare);
+    if (price === null) return;
+    if (state.mareHistory[0] === price) return;
+    if (state.mareHistory.includes(price)) return;
+    state.mareHistory.unshift(price);
+    state.mareHistory = state.mareHistory.slice(0, 3);
+    renderMareHistory();
+  }
+
+  function renderMareHistory() {
+    els.historyRows.forEach((row, idx) => {
+      const label = row.querySelector('span');
+      const btn = row.querySelector('button');
+      const price = state.mareHistory[idx];
+      if (price === undefined) {
+        if (label) label.textContent = `履歴${idx + 1}：──万円`;
+        if (btn) btn.disabled = true;
+      } else {
+        if (label) label.textContent = `履歴${idx + 1}：${price}万円`;
+        if (btn) btn.disabled = false;
+        btn.onclick = () => {
+          els.priceMare.value = price;
+        };
+      }
+    });
+  }
+
+  function bindHistoryButtons() {
+    renderMareHistory();
+  }
+
+  function resetAllInputs() {
+    if (els.priceFoal) els.priceFoal.value = '1000';
+    if (els.priceStallion) els.priceStallion.value = '';
+    if (els.priceMare) els.priceMare.value = '400';
+
+    document.querySelectorAll('input[name="sex"]').forEach((r) => {
+      const radio = r;
+      radio.checked = false;
+    });
+
+    const babySelect = document.getElementById('comment-baby');
+    if (babySelect) babySelect.value = '';
+
+    document.querySelectorAll('input[name="comment-2yo-soshitsu"], input[name="comment-2yo-kashikoi"]').forEach((c) => {
+      const checkbox = c;
+      checkbox.checked = false;
+    });
+
+    if (els.bestWeight) els.bestWeight.value = 450;
+    if (els.growthType) els.growthType.value = '超早熟';
+    if (els.okMonth) els.okMonth.value = 4;
+    if (els.okWeek) els.okWeek.value = 1;
+
+    if (els.stallionInitial) els.stallionInitial.value = '-';
+    if (els.mareInitial) els.mareInitial.value = '-';
+    refreshStallionDropdowns();
+    refreshMareDropdowns();
+
+    resetSpGrid();
+    resetKspFields();
+    const msg = document.getElementById('ksp-message');
+    if (msg) msg.textContent = '';
+
+    state.lastResult = null;
+    state.hasExplicitOk = false;
+  }
+});
+
+</script></html>
